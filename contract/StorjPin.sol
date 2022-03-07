@@ -15,9 +15,9 @@ contract StorjPin is Ownable {
         token = ERC20(_tokenAddress);
     }
 
-    function pin(string memory ipfsHash, uint256 amount) public {
-        require(token.transferFrom(msg.sender, address(this), amount));
-        emit Pinned(msg.sender, amount, ipfsHash);
+    function pin(string memory ipfsHash, uint256 tokenAmount) public {
+        require(token.transferFrom(msg.sender, address(this), tokenAmount));
+        emit Pinned(msg.sender, tokenAmount, ipfsHash);
     }
 
     function withdraw(address target) public onlyOwner {
