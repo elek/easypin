@@ -1,3 +1,35 @@
+
+
+# Rinbkeby deployment
+
+ERC20 token (GOLD): [0x39AaBAF5DebD0855908D382C81eAD5705C52Fc5a](https://rinkeby.etherscan.io/address/0x39AaBAF5DebD0855908D382C81eAD5705C52Fc5a)
+
+FAUCET contract (call the `get` to get 1 TOKEN): [0x0d5BEf7d1FeAEaF3E28CD1d134ab17a49B9bBF38](https://rinkeby.etherscan.io/address/0x39AaBAF5DebD0855908D382C81eAD5705C52Fc5a)
+
+PIN contract: [0x245a6405aA8377D3cA06160E24D4eb6622a02C66](https://rinkeby.etherscan.io/address/0x245a6405aA8377D3cA06160E24D4eb6622a02C66)
+
+
+Deployed with:
+
+```
+export CETH_ACCOUNT=...
+ceth c deploy --name GOLD --abi ../test/Gold.abi ../test/Gold.bin
+ceth c deploy --name FAUCET --abi ../test/Faucet.abi ../test/Faucet.bin '(address)' GOLD
+ceth c deploy --name PIN --abi ../contract/ ../test/Faucet.bin '(address)' GOLD
+
+
+
+```
+
+# Local development
+
+## Generate two accounts
+
+```
+cethacea account generate
+cethacea account generate
+```
+
 ## Deploy GOLD token (key1)
 
 ```
