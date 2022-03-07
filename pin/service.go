@@ -77,3 +77,16 @@ func (service *Service) Pins(ctx context.Context) (_ []Pin, err error) {
 
 	return pins, nil
 }
+
+type WebConfig struct {
+	TokenAddress string
+}
+
+// Config returns the UI configuration
+func (service *Service) Config(ctx context.Context) (cfg WebConfig, err error) {
+	defer mon.Task()(&ctx)(&err)
+
+	return WebConfig{
+		TokenAddress: service.token.Hex(),
+	}, nil
+}

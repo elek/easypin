@@ -34,6 +34,7 @@ func NewEndpoint(log *zap.Logger, service *Service) *Endpoint {
 // Register registers endpoint methods on API server subroute.
 func (endpoint *Endpoint) Register(router *mux.Router) {
 	router.HandleFunc("/all", endpoint.Pins).Methods(http.MethodGet)
+	router.HandleFunc("/config", endpoint.Config).Methods(http.MethodGet)
 }
 
 // Pins endpoint retrieves all Pin request events.
@@ -50,7 +51,26 @@ func (endpoint *Endpoint) Pins(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(payments)
 	if err != nil {
-		endpoint.log.Error("failed to write json payments response", zap.Error(ErrEndpoint.Wrap(err)))
+		endpoint.log.Error("failed to write json pins response", zap.Error(ErrEndpoint.Wrap(err)))
+		return
+	}
+}
+
+// Config returns with the actual config required by the web UI.
+func (endpoint *Endpoint) Config(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var err error
+	defer mon.Task()(&ctx)(&err)
+
+	config, err := endpoint.service.Config(ctx)
+	if err != nil {
+		endpoint.serveJSONError(w, http.StatusInternalServerError, ErrEndpoint.Wrap(err))
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(config)
+	if err != nil {
+		endpoint.log.Error("failed to write json config response", zap.Error(ErrEndpoint.Wrap(err)))
 		return
 	}
 }

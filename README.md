@@ -21,7 +21,7 @@ ceth c deploy --name PIN --abi ../contract/ ../test/Faucet.bin '(address)' GOLD
 
 ```
 
-# Local development
+# Local deployment
 
 ## Generate two accounts
 
@@ -81,3 +81,22 @@ go run ./cmd/easypin/main.go --pin.endpoint=http://sd:8545 \
 curl localhost:8787/api/v0/pin/all
 [{"Cid":"QmcUkP3BMDkKNp2V6FTojXqgCMWdpDFQb74uphQVdWpi9Z","TokenValue":100000000000000000,"Transaction":"0xace7f0e4ad0a2a9e93e14db6e870b4f6dbcbea88b2ddf016f37d6b63909887ad"}]
 ```
+
+# Web development
+
+Developer version (proxy is activated for `/api/*` to proxy requests to `127.0.0.1:8787`: it requires running go lang instance ):
+
+```
+cd web
+npm install
+npx vite
+```
+
+Production version:
+
+```
+cd web
+npm build
+```
+
+It saves the final artifacts to `web/dist` which is exposed by the golang api.
