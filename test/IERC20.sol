@@ -7,17 +7,17 @@ pragma solidity ^0.8.0;
  */
 interface IERC20 {
     /**
-     * @dev Returns the amount of tokens in existence.
+     * @dev Returns the amount of pin in existence.
      */
     function totalSupply() external view returns (uint256);
 
     /**
-     * @dev Returns the amount of tokens owned by `account`.
+     * @dev Returns the amount of pin owned by `account`.
      */
     function balanceOf(address account) external view returns (uint256);
 
     /**
-     * @dev Moves `amount` tokens from the caller's account to `recipient`.
+     * @dev Moves `amount` pin from the caller's account to `recipient`.
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
@@ -26,7 +26,7 @@ interface IERC20 {
     function transfer(address recipient, uint256 amount) external returns (bool);
 
     /**
-     * @dev Returns the remaining number of tokens that `spender` will be
+     * @dev Returns the remaining number of pin that `spender` will be
      * allowed to spend on behalf of `owner` through {transferFrom}. This is
      * zero by default.
      *
@@ -35,7 +35,7 @@ interface IERC20 {
     function allowance(address owner, address spender) external view returns (uint256);
 
     /**
-     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
+     * @dev Sets `amount` as the allowance of `spender` over the caller's pin.
      *
      * Returns a boolean value indicating whether the operation succeeded.
      *
@@ -51,7 +51,7 @@ interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
 
     /**
-     * @dev Moves `amount` tokens from `sender` to `recipient` using the
+     * @dev Moves `amount` pin from `sender` to `recipient` using the
      * allowance mechanism. `amount` is then deducted from the caller's
      * allowance.
      *
@@ -66,7 +66,7 @@ interface IERC20 {
     ) external returns (bool);
 
     /**
-     * @dev Emitted when `value` tokens are moved from one account (`from`) to
+     * @dev Emitted when `value` pin are moved from one account (`from`) to
      * another (`to`).
      *
      * Note that `value` may be zero.
