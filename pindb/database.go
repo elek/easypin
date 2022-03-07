@@ -1,7 +1,7 @@
 // Copyright (C) 2021 Storj Labs, Inc.
 // See LICENSE for copying information.
 
-package storjscandb
+package pindb
 
 import (
 	"context"
@@ -44,7 +44,7 @@ func Open(ctx context.Context, log *zap.Logger, databaseURL string) (*DB, error)
 		return nil, Error.New("unsupported driver %q", driver)
 	}
 
-	source, err = pgutil.CheckApplicationName(source, "easypindb")
+	source, err = pgutil.CheckApplicationName(source, "easypin")
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func Open(ctx context.Context, log *zap.Logger, databaseURL string) (*DB, error)
 	}
 	log.Debug("Connected to:", zap.String("pindb source", source))
 
-	dbutil.Configure(ctx, dbxDB.DB, "easypindb", mon)
+	dbutil.Configure(ctx, dbxDB.DB, "easypin", mon)
 
 	db := &DB{
 		DB:             dbxDB,
@@ -97,21 +97,22 @@ func (db *DB) PostgresMigration() *migrate.Migration {
 				Description: "Initial setup",
 				Version:     0,
 				Action: migrate.SQL{
-					`
-CREATE TABLE block_headers (
-	hash bytea NOT NULL,
-	number bigint NOT NULL,
-	timestamp timestamp with time zone NOT NULL,
-	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
-	PRIMARY KEY ( hash )
-);
-CREATE TABLE pins (
-	cid bytea NOT NULL,
+					`CREATE TABLE nodes (
+	cid text NOT NULL,
+	expired_at timestamp with time zone NOT NULL,
 	amount bigint NOT NULL,
 	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
 	PRIMARY KEY ( cid )
 );
-CREATE INDEX block_header_timestamp ON block_headers ( timestamp ) ;`,
+CREATE TABLE pins (
+	tx text NOT NULL,
+	ix integer NOT NULL,
+	cid text NOT NULL,
+	amount bigint NOT NULL,
+	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
+	PRIMARY KEY ( tx, ix )
+);
+`,
 				},
 			},
 		},

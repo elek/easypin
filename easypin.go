@@ -37,9 +37,10 @@ type DB interface {
 //
 // architecture: Peer
 type App struct {
-	Log     *zap.Logger
-	DB      DB
-	Servers *lifecycle.Group
+	Log      *zap.Logger
+	DB       DB
+	Servers  *lifecycle.Group
+	Services *lifecycle.Group
 
 	Debug struct {
 		Listener net.Listener
@@ -60,10 +61,10 @@ type App struct {
 // NewApp creates new storjscan application instance.
 func NewApp(log *zap.Logger, config Config, db DB) (*App, error) {
 	app := &App{
-		Log: log,
-		DB:  db,
-
-		Servers: lifecycle.NewGroup(log.Named("servers")),
+		Log:      log,
+		DB:       db,
+		Services: lifecycle.NewGroup(log.Named("services")),
+		Servers:  lifecycle.NewGroup(log.Named("servers")),
 	}
 
 	{ // pin
@@ -73,12 +74,21 @@ func NewApp(log *zap.Logger, config Config, db DB) (*App, error) {
 		}
 
 		app.Pin.Service = pin.NewService(log.Named("pin:service"),
+			db.Pins(),
 			config.Pin.Endpoint,
 			token)
 
 		app.Pin.Endpoint = pin.NewEndpoint(log.Named("pin:endpoint"), app.Pin.Service)
 	}
 
+	{
+		chore := pin.NewChore(log.Named("persister:core"), db.Pins(), config.Pin.Endpoint, config.Pin.TokenAddress)
+		app.Services.Add(lifecycle.Item{
+			Name:  "persister:chore",
+			Run:   chore.Run,
+			Close: chore.Close,
+		})
+	}
 	{ // API
 		var err error
 
@@ -110,11 +120,13 @@ func (app *App) Run(ctx context.Context) (err error) {
 	group, ctx := errgroup.WithContext(ctx)
 
 	app.Servers.Run(ctx, group)
+	app.Services.Run(ctx, group)
 
 	return group.Wait()
 }
 
 // Close closes all the resources.
 func (app *App) Close() error {
+	return app.Services.Close()
 	return app.Servers.Close()
 }

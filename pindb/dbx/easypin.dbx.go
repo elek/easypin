@@ -316,20 +316,21 @@ func newpgx(db *DB) *pgxDB {
 }
 
 func (obj *pgxDB) Schema() string {
-	return `CREATE TABLE block_headers (
-	hash bytea NOT NULL,
-	number bigint NOT NULL,
-	timestamp timestamp with time zone NOT NULL,
-	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
-	PRIMARY KEY ( hash )
-);
-CREATE TABLE pins (
-	cid bytea NOT NULL,
+	return `CREATE TABLE nodes (
+	cid text NOT NULL,
+	expired_at timestamp with time zone NOT NULL,
 	amount bigint NOT NULL,
 	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
 	PRIMARY KEY ( cid )
 );
-CREATE INDEX block_header_timestamp ON block_headers ( timestamp ) ;`
+CREATE TABLE pins (
+	tx text NOT NULL,
+	ix integer NOT NULL,
+	cid text NOT NULL,
+	amount bigint NOT NULL,
+	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
+	PRIMARY KEY ( tx, ix )
+);`
 }
 
 func (obj *pgxDB) wrapTx(tx tagsql.Tx) txMethods {
@@ -393,96 +394,98 @@ nextval:
 	fmt.Fprint(f, "]")
 }
 
-type BlockHeader struct {
-	Hash      []byte
-	Number    int64
-	Timestamp time.Time
+type Node struct {
+	Cid       string
+	ExpiredAt time.Time
+	Amount    int64
 	CreatedAt time.Time
 }
 
-func (BlockHeader) _Table() string { return "block_headers" }
+func (Node) _Table() string { return "nodes" }
 
-type BlockHeader_Update_Fields struct {
+type Node_Update_Fields struct {
 }
 
-type BlockHeader_Hash_Field struct {
+type Node_Cid_Field struct {
 	_set   bool
 	_null  bool
-	_value []byte
+	_value string
 }
 
-func BlockHeader_Hash(v []byte) BlockHeader_Hash_Field {
-	return BlockHeader_Hash_Field{_set: true, _value: v}
+func Node_Cid(v string) Node_Cid_Field {
+	return Node_Cid_Field{_set: true, _value: v}
 }
 
-func (f BlockHeader_Hash_Field) value() interface{} {
+func (f Node_Cid_Field) value() interface{} {
 	if !f._set || f._null {
 		return nil
 	}
 	return f._value
 }
 
-func (BlockHeader_Hash_Field) _Column() string { return "hash" }
+func (Node_Cid_Field) _Column() string { return "cid" }
 
-type BlockHeader_Number_Field struct {
+type Node_ExpiredAt_Field struct {
+	_set   bool
+	_null  bool
+	_value time.Time
+}
+
+func Node_ExpiredAt(v time.Time) Node_ExpiredAt_Field {
+	return Node_ExpiredAt_Field{_set: true, _value: v}
+}
+
+func (f Node_ExpiredAt_Field) value() interface{} {
+	if !f._set || f._null {
+		return nil
+	}
+	return f._value
+}
+
+func (Node_ExpiredAt_Field) _Column() string { return "expired_at" }
+
+type Node_Amount_Field struct {
 	_set   bool
 	_null  bool
 	_value int64
 }
 
-func BlockHeader_Number(v int64) BlockHeader_Number_Field {
-	return BlockHeader_Number_Field{_set: true, _value: v}
+func Node_Amount(v int64) Node_Amount_Field {
+	return Node_Amount_Field{_set: true, _value: v}
 }
 
-func (f BlockHeader_Number_Field) value() interface{} {
+func (f Node_Amount_Field) value() interface{} {
 	if !f._set || f._null {
 		return nil
 	}
 	return f._value
 }
 
-func (BlockHeader_Number_Field) _Column() string { return "number" }
+func (Node_Amount_Field) _Column() string { return "amount" }
 
-type BlockHeader_Timestamp_Field struct {
+type Node_CreatedAt_Field struct {
 	_set   bool
 	_null  bool
 	_value time.Time
 }
 
-func BlockHeader_Timestamp(v time.Time) BlockHeader_Timestamp_Field {
-	return BlockHeader_Timestamp_Field{_set: true, _value: v}
+func Node_CreatedAt(v time.Time) Node_CreatedAt_Field {
+	return Node_CreatedAt_Field{_set: true, _value: v}
 }
 
-func (f BlockHeader_Timestamp_Field) value() interface{} {
+func (f Node_CreatedAt_Field) value() interface{} {
 	if !f._set || f._null {
 		return nil
 	}
 	return f._value
 }
 
-func (BlockHeader_Timestamp_Field) _Column() string { return "timestamp" }
-
-type BlockHeader_CreatedAt_Field struct {
-	_set   bool
-	_null  bool
-	_value time.Time
-}
-
-func BlockHeader_CreatedAt(v time.Time) BlockHeader_CreatedAt_Field {
-	return BlockHeader_CreatedAt_Field{_set: true, _value: v}
-}
-
-func (f BlockHeader_CreatedAt_Field) value() interface{} {
-	if !f._set || f._null {
-		return nil
-	}
-	return f._value
-}
-
-func (BlockHeader_CreatedAt_Field) _Column() string { return "created_at" }
+func (Node_CreatedAt_Field) _Column() string { return "created_at" }
 
 type Pin struct {
-	Cid       []byte
+	Tx        string
+	Ix        int
+	Cid       string
 	Amount    int64
 	CreatedAt time.Time
 }
@@ -492,13 +495,51 @@ func (Pin) _Table() string { return "pins" }
 type Pin_Update_Fields struct {
 }
 
+type Pin_Tx_Field struct {
+	_set   bool
+	_null  bool
+	_value string
+}
+
+func Pin_Tx(v string) Pin_Tx_Field {
+	return Pin_Tx_Field{_set: true, _value: v}
+}
+
+func (f Pin_Tx_Field) value() interface{} {
+	if !f._set || f._null {
+		return nil
+	}
+	return f._value
+}
+
+func (Pin_Tx_Field) _Column() string { return "tx" }
+
+type Pin_Ix_Field struct {
+	_set   bool
+	_null  bool
+	_value int
+}
+
+func Pin_Ix(v int) Pin_Ix_Field {
+	return Pin_Ix_Field{_set: true, _value: v}
+}
+
+func (f Pin_Ix_Field) value() interface{} {
+	if !f._set || f._null {
+		return nil
+	}
+	return f._value
+}
+
+func (Pin_Ix_Field) _Column() string { return "ix" }
+
 type Pin_Cid_Field struct {
 	_set   bool
 	_null  bool
-	_value []byte
+	_value string
 }
 
-func Pin_Cid(v []byte) Pin_Cid_Field {
+func Pin_Cid(v string) Pin_Cid_Field {
 	return Pin_Cid_Field{_set: true, _value: v}
 }
 
@@ -969,59 +1010,32 @@ func (h *__sqlbundle_Hole) Render() string {
 // end runtime support for building sql statements
 //
 
-func (obj *pgxImpl) Create_BlockHeader(ctx context.Context,
-	block_header_hash BlockHeader_Hash_Field,
-	block_header_number BlockHeader_Number_Field,
-	block_header_timestamp BlockHeader_Timestamp_Field) (
-	block_header *BlockHeader, err error) {
-	defer mon.Task()(&ctx)(&err)
-	__hash_val := block_header_hash.value()
-	__number_val := block_header_number.value()
-	__timestamp_val := block_header_timestamp.value()
-
-	var __columns = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("hash, number, timestamp")}
-	var __placeholders = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("?, ?, ?")}
-	var __clause = &__sqlbundle_Hole{SQL: __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("("), __columns, __sqlbundle_Literal(") VALUES ("), __placeholders, __sqlbundle_Literal(")")}}}
-
-	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("INSERT INTO block_headers "), __clause, __sqlbundle_Literal(" RETURNING block_headers.hash, block_headers.number, block_headers.timestamp, block_headers.created_at")}}
-
-	var __values []interface{}
-	__values = append(__values, __hash_val, __number_val, __timestamp_val)
-
-	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
-	obj.logStmt(__stmt, __values...)
-
-	block_header = &BlockHeader{}
-	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&block_header.Hash, &block_header.Number, &block_header.Timestamp, &block_header.CreatedAt)
-	if err != nil {
-		return nil, obj.makeErr(err)
-	}
-	return block_header, nil
-
-}
-
 func (obj *pgxImpl) Create_Pin(ctx context.Context,
+	pin_tx Pin_Tx_Field,
+	pin_ix Pin_Ix_Field,
 	pin_cid Pin_Cid_Field,
 	pin_amount Pin_Amount_Field) (
 	pin *Pin, err error) {
 	defer mon.Task()(&ctx)(&err)
+	__tx_val := pin_tx.value()
+	__ix_val := pin_ix.value()
 	__cid_val := pin_cid.value()
 	__amount_val := pin_amount.value()
 
-	var __columns = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("cid, amount")}
-	var __placeholders = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("?, ?")}
+	var __columns = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("tx, ix, cid, amount")}
+	var __placeholders = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("?, ?, ?, ?")}
 	var __clause = &__sqlbundle_Hole{SQL: __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("("), __columns, __sqlbundle_Literal(") VALUES ("), __placeholders, __sqlbundle_Literal(")")}}}
 
-	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("INSERT INTO pins "), __clause, __sqlbundle_Literal(" RETURNING pins.cid, pins.amount, pins.created_at")}}
+	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("INSERT INTO pins "), __clause, __sqlbundle_Literal(" RETURNING pins.tx, pins.ix, pins.cid, pins.amount, pins.created_at")}}
 
 	var __values []interface{}
-	__values = append(__values, __cid_val, __amount_val)
+	__values = append(__values, __tx_val, __ix_val, __cid_val, __amount_val)
 
 	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
 	obj.logStmt(__stmt, __values...)
 
 	pin = &Pin{}
-	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&pin.Cid, &pin.Amount, &pin.CreatedAt)
+	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&pin.Tx, &pin.Ix, &pin.Cid, &pin.Amount, &pin.CreatedAt)
 	if err != nil {
 		return nil, obj.makeErr(err)
 	}
@@ -1029,86 +1043,52 @@ func (obj *pgxImpl) Create_Pin(ctx context.Context,
 
 }
 
-func (obj *pgxImpl) All_BlockHeader_OrderBy_Desc_Timestamp(ctx context.Context) (
-	rows []*BlockHeader, err error) {
+func (obj *pgxImpl) Create_Node(ctx context.Context,
+	node_cid Node_Cid_Field,
+	node_expired_at Node_ExpiredAt_Field,
+	node_amount Node_Amount_Field) (
+	node *Node, err error) {
 	defer mon.Task()(&ctx)(&err)
+	__cid_val := node_cid.value()
+	__expired_at_val := node_expired_at.value()
+	__amount_val := node_amount.value()
 
-	var __embed_stmt = __sqlbundle_Literal("SELECT block_headers.hash, block_headers.number, block_headers.timestamp, block_headers.created_at FROM block_headers ORDER BY block_headers.timestamp DESC")
+	var __columns = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("cid, expired_at, amount")}
+	var __placeholders = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("?, ?, ?")}
+	var __clause = &__sqlbundle_Hole{SQL: __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("("), __columns, __sqlbundle_Literal(") VALUES ("), __placeholders, __sqlbundle_Literal(")")}}}
+
+	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("INSERT INTO nodes "), __clause, __sqlbundle_Literal(" RETURNING nodes.cid, nodes.expired_at, nodes.amount, nodes.created_at")}}
 
 	var __values []interface{}
+	__values = append(__values, __cid_val, __expired_at_val, __amount_val)
 
 	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
 	obj.logStmt(__stmt, __values...)
 
-	for {
-		rows, err = func() (rows []*BlockHeader, err error) {
-			__rows, err := obj.driver.QueryContext(ctx, __stmt, __values...)
-			if err != nil {
-				return nil, err
-			}
-			defer __rows.Close()
-
-			for __rows.Next() {
-				block_header := &BlockHeader{}
-				err = __rows.Scan(&block_header.Hash, &block_header.Number, &block_header.Timestamp, &block_header.CreatedAt)
-				if err != nil {
-					return nil, err
-				}
-				rows = append(rows, block_header)
-			}
-			if err := __rows.Err(); err != nil {
-				return nil, err
-			}
-			return rows, nil
-		}()
-		if err != nil {
-			if obj.shouldRetry(err) {
-				continue
-			}
-			return nil, obj.makeErr(err)
-		}
-		return rows, nil
-	}
-
-}
-
-func (obj *pgxImpl) Get_BlockHeader_By_Hash(ctx context.Context,
-	block_header_hash BlockHeader_Hash_Field) (
-	block_header *BlockHeader, err error) {
-	defer mon.Task()(&ctx)(&err)
-
-	var __embed_stmt = __sqlbundle_Literal("SELECT block_headers.hash, block_headers.number, block_headers.timestamp, block_headers.created_at FROM block_headers WHERE block_headers.hash = ?")
-
-	var __values []interface{}
-	__values = append(__values, block_header_hash.value())
-
-	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
-	obj.logStmt(__stmt, __values...)
-
-	block_header = &BlockHeader{}
-	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&block_header.Hash, &block_header.Number, &block_header.Timestamp, &block_header.CreatedAt)
+	node = &Node{}
+	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&node.Cid, &node.ExpiredAt, &node.Amount, &node.CreatedAt)
 	if err != nil {
-		return (*BlockHeader)(nil), obj.makeErr(err)
+		return nil, obj.makeErr(err)
 	}
-	return block_header, nil
+	return node, nil
 
 }
 
-func (obj *pgxImpl) Get_BlockHeader_By_Number(ctx context.Context,
-	block_header_number BlockHeader_Number_Field) (
-	block_header *BlockHeader, err error) {
+func (obj *pgxImpl) Get_Pin_By_Cid(ctx context.Context,
+	pin_cid Pin_Cid_Field) (
+	pin *Pin, err error) {
 	defer mon.Task()(&ctx)(&err)
 
-	var __embed_stmt = __sqlbundle_Literal("SELECT block_headers.hash, block_headers.number, block_headers.timestamp, block_headers.created_at FROM block_headers WHERE block_headers.number = ? LIMIT 2")
+	var __embed_stmt = __sqlbundle_Literal("SELECT pins.tx, pins.ix, pins.cid, pins.amount, pins.created_at FROM pins WHERE pins.cid = ? LIMIT 2")
 
 	var __values []interface{}
-	__values = append(__values, block_header_number.value())
+	__values = append(__values, pin_cid.value())
 
 	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
 	obj.logStmt(__stmt, __values...)
 
 	for {
-		block_header, err = func() (block_header *BlockHeader, err error) {
+		pin, err = func() (pin *Pin, err error) {
 			__rows, err := obj.driver.QueryContext(ctx, __stmt, __values...)
 			if err != nil {
 				return nil, err
@@ -1122,8 +1102,8 @@ func (obj *pgxImpl) Get_BlockHeader_By_Number(ctx context.Context,
 				return nil, sql.ErrNoRows
 			}
 
-			block_header = &BlockHeader{}
-			err = __rows.Scan(&block_header.Hash, &block_header.Number, &block_header.Timestamp, &block_header.CreatedAt)
+			pin = &Pin{}
+			err = __rows.Scan(&pin.Tx, &pin.Ix, &pin.Cid, &pin.Amount, &pin.CreatedAt)
 			if err != nil {
 				return nil, err
 			}
@@ -1136,115 +1116,19 @@ func (obj *pgxImpl) Get_BlockHeader_By_Number(ctx context.Context,
 				return nil, err
 			}
 
-			return block_header, nil
+			return pin, nil
 		}()
 		if err != nil {
 			if obj.shouldRetry(err) {
 				continue
 			}
 			if err == errTooManyRows {
-				return nil, tooManyRows("BlockHeader_By_Number")
+				return nil, tooManyRows("Pin_By_Cid")
 			}
 			return nil, obj.makeErr(err)
 		}
-		return block_header, nil
+		return pin, nil
 	}
-
-}
-
-func (obj *pgxImpl) First_BlockHeader_By_Timestamp_Greater(ctx context.Context,
-	block_header_timestamp_greater BlockHeader_Timestamp_Field) (
-	block_header *BlockHeader, err error) {
-	defer mon.Task()(&ctx)(&err)
-
-	var __embed_stmt = __sqlbundle_Literal("SELECT block_headers.hash, block_headers.number, block_headers.timestamp, block_headers.created_at FROM block_headers WHERE block_headers.timestamp > ? LIMIT 1 OFFSET 0")
-
-	var __values []interface{}
-	__values = append(__values, block_header_timestamp_greater.value())
-
-	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
-	obj.logStmt(__stmt, __values...)
-
-	for {
-		block_header, err = func() (block_header *BlockHeader, err error) {
-			__rows, err := obj.driver.QueryContext(ctx, __stmt, __values...)
-			if err != nil {
-				return nil, err
-			}
-			defer __rows.Close()
-
-			if !__rows.Next() {
-				if err := __rows.Err(); err != nil {
-					return nil, err
-				}
-				return nil, nil
-			}
-
-			block_header = &BlockHeader{}
-			err = __rows.Scan(&block_header.Hash, &block_header.Number, &block_header.Timestamp, &block_header.CreatedAt)
-			if err != nil {
-				return nil, err
-			}
-
-			return block_header, nil
-		}()
-		if err != nil {
-			if obj.shouldRetry(err) {
-				continue
-			}
-			return nil, obj.makeErr(err)
-		}
-		return block_header, nil
-	}
-
-}
-
-func (obj *pgxImpl) Get_Pin_By_Cid(ctx context.Context,
-	pin_cid Pin_Cid_Field) (
-	pin *Pin, err error) {
-	defer mon.Task()(&ctx)(&err)
-
-	var __embed_stmt = __sqlbundle_Literal("SELECT pins.cid, pins.amount, pins.created_at FROM pins WHERE pins.cid = ?")
-
-	var __values []interface{}
-	__values = append(__values, pin_cid.value())
-
-	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
-	obj.logStmt(__stmt, __values...)
-
-	pin = &Pin{}
-	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&pin.Cid, &pin.Amount, &pin.CreatedAt)
-	if err != nil {
-		return (*Pin)(nil), obj.makeErr(err)
-	}
-	return pin, nil
-
-}
-
-func (obj *pgxImpl) Delete_BlockHeader_By_Hash(ctx context.Context,
-	block_header_hash BlockHeader_Hash_Field) (
-	deleted bool, err error) {
-	defer mon.Task()(&ctx)(&err)
-
-	var __embed_stmt = __sqlbundle_Literal("DELETE FROM block_headers WHERE block_headers.hash = ?")
-
-	var __values []interface{}
-	__values = append(__values, block_header_hash.value())
-
-	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
-	obj.logStmt(__stmt, __values...)
-
-	__res, err := obj.driver.ExecContext(ctx, __stmt, __values...)
-	if err != nil {
-		return false, obj.makeErr(err)
-	}
-
-	__count, err := __res.RowsAffected()
-	if err != nil {
-		return false, obj.makeErr(err)
-	}
-
-	return __count > 0, nil
 
 }
 
@@ -1272,7 +1156,7 @@ func (obj *pgxImpl) deleteAll(ctx context.Context) (count int64, err error) {
 		return 0, obj.makeErr(err)
 	}
 	count += __count
-	__res, err = obj.driver.ExecContext(ctx, "DELETE FROM block_headers;")
+	__res, err = obj.driver.ExecContext(ctx, "DELETE FROM nodes;")
 	if err != nil {
 		return 0, obj.makeErr(err)
 	}
@@ -1329,29 +1213,22 @@ func (rx *Rx) Rollback() (err error) {
 	return err
 }
 
-func (rx *Rx) All_BlockHeader_OrderBy_Desc_Timestamp(ctx context.Context) (
-	rows []*BlockHeader, err error) {
+func (rx *Rx) Create_Node(ctx context.Context,
+	node_cid Node_Cid_Field,
+	node_expired_at Node_ExpiredAt_Field,
+	node_amount Node_Amount_Field) (
+	node *Node, err error) {
 	var tx *Tx
 	if tx, err = rx.getTx(ctx); err != nil {
 		return
 	}
-	return tx.All_BlockHeader_OrderBy_Desc_Timestamp(ctx)
-}
-
-func (rx *Rx) Create_BlockHeader(ctx context.Context,
-	block_header_hash BlockHeader_Hash_Field,
-	block_header_number BlockHeader_Number_Field,
-	block_header_timestamp BlockHeader_Timestamp_Field) (
-	block_header *BlockHeader, err error) {
-	var tx *Tx
-	if tx, err = rx.getTx(ctx); err != nil {
-		return
-	}
-	return tx.Create_BlockHeader(ctx, block_header_hash, block_header_number, block_header_timestamp)
+	return tx.Create_Node(ctx, node_cid, node_expired_at, node_amount)
 
 }
 
 func (rx *Rx) Create_Pin(ctx context.Context,
+	pin_tx Pin_Tx_Field,
+	pin_ix Pin_Ix_Field,
 	pin_cid Pin_Cid_Field,
 	pin_amount Pin_Amount_Field) (
 	pin *Pin, err error) {
@@ -1359,48 +1236,8 @@ func (rx *Rx) Create_Pin(ctx context.Context,
 	if tx, err = rx.getTx(ctx); err != nil {
 		return
 	}
-	return tx.Create_Pin(ctx, pin_cid, pin_amount)
+	return tx.Create_Pin(ctx, pin_tx, pin_ix, pin_cid, pin_amount)
 
-}
-
-func (rx *Rx) Delete_BlockHeader_By_Hash(ctx context.Context,
-	block_header_hash BlockHeader_Hash_Field) (
-	deleted bool, err error) {
-	var tx *Tx
-	if tx, err = rx.getTx(ctx); err != nil {
-		return
-	}
-	return tx.Delete_BlockHeader_By_Hash(ctx, block_header_hash)
-}
-
-func (rx *Rx) First_BlockHeader_By_Timestamp_Greater(ctx context.Context,
-	block_header_timestamp_greater BlockHeader_Timestamp_Field) (
-	block_header *BlockHeader, err error) {
-	var tx *Tx
-	if tx, err = rx.getTx(ctx); err != nil {
-		return
-	}
-	return tx.First_BlockHeader_By_Timestamp_Greater(ctx, block_header_timestamp_greater)
-}
-
-func (rx *Rx) Get_BlockHeader_By_Hash(ctx context.Context,
-	block_header_hash BlockHeader_Hash_Field) (
-	block_header *BlockHeader, err error) {
-	var tx *Tx
-	if tx, err = rx.getTx(ctx); err != nil {
-		return
-	}
-	return tx.Get_BlockHeader_By_Hash(ctx, block_header_hash)
-}
-
-func (rx *Rx) Get_BlockHeader_By_Number(ctx context.Context,
-	block_header_number BlockHeader_Number_Field) (
-	block_header *BlockHeader, err error) {
-	var tx *Tx
-	if tx, err = rx.getTx(ctx); err != nil {
-		return
-	}
-	return tx.Get_BlockHeader_By_Number(ctx, block_header_number)
 }
 
 func (rx *Rx) Get_Pin_By_Cid(ctx context.Context,
@@ -1414,35 +1251,18 @@ func (rx *Rx) Get_Pin_By_Cid(ctx context.Context,
 }
 
 type Methods interface {
-	All_BlockHeader_OrderBy_Desc_Timestamp(ctx context.Context) (
-		rows []*BlockHeader, err error)
-
-	Create_BlockHeader(ctx context.Context,
-		block_header_hash BlockHeader_Hash_Field,
-		block_header_number BlockHeader_Number_Field,
-		block_header_timestamp BlockHeader_Timestamp_Field) (
-		block_header *BlockHeader, err error)
+	Create_Node(ctx context.Context,
+		node_cid Node_Cid_Field,
+		node_expired_at Node_ExpiredAt_Field,
+		node_amount Node_Amount_Field) (
+		node *Node, err error)
 
 	Create_Pin(ctx context.Context,
+		pin_tx Pin_Tx_Field,
+		pin_ix Pin_Ix_Field,
 		pin_cid Pin_Cid_Field,
 		pin_amount Pin_Amount_Field) (
 		pin *Pin, err error)
-
-	Delete_BlockHeader_By_Hash(ctx context.Context,
-		block_header_hash BlockHeader_Hash_Field) (
-		deleted bool, err error)
-
-	First_BlockHeader_By_Timestamp_Greater(ctx context.Context,
-		block_header_timestamp_greater BlockHeader_Timestamp_Field) (
-		block_header *BlockHeader, err error)
-
-	Get_BlockHeader_By_Hash(ctx context.Context,
-		block_header_hash BlockHeader_Hash_Field) (
-		block_header *BlockHeader, err error)
-
-	Get_BlockHeader_By_Number(ctx context.Context,
-		block_header_number BlockHeader_Number_Field) (
-		block_header *BlockHeader, err error)
 
 	Get_Pin_By_Cid(ctx context.Context,
 		pin_cid Pin_Cid_Field) (

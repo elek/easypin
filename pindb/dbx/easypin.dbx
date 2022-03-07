@@ -1,46 +1,10 @@
-//--- block_header --- //
-model block_header (
-	key hash
-
-	index (
-		name block_header_timestamp
-		fields timestamp
-	)
-
-	field hash       blob
-	field number     int64
-	field timestamp  timestamp
-	field created_at timestamp ( autoinsert, default current_timestamp )
-)
-
-create block_header ( )
-delete block_header ( where block_header.hash = ? )
-
-read all (
-	select block_header
-	orderby desc block_header.timestamp
-)
-
-read one (
-	select block_header
-	where block_header.hash = ?
-)
-
-read one (
-	select block_header
-	where block_header.number = ?
-)
-
-read first (
-	select block_header
-	where block_header.timestamp > ?
-)
-
-//--- wallet ---//
+//--- ping requests ---//
 model pin (
-    key cid
+    key tx ix
 
-    field cid blob
+    field tx text
+    field ix int
+    field cid text
     field amount int64
     field created_at timestamp ( autoinsert, default current_timestamp )
 )
@@ -51,3 +15,14 @@ read one (
     select pin
     where pin.cid = ?
 )
+
+//--- ipfs nodes to be pinned ---//
+model node (
+    key cid
+    field cid text
+    field expired_at timestamp
+    field amount int64
+    field created_at timestamp ( autoinsert, default current_timestamp )
+)
+
+create node ( )

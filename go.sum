@@ -707,6 +707,7 @@ github.com/zeebo/clingy v0.0.0-20220125233608-1457d47c8d8d/go.mod h1:MHEhXvEfewf
 github.com/zeebo/errs v1.1.1/go.mod h1:Yj8dHrUQwls1bF3dr/vcSIu+qf4mI7idnTcHfoACc6I=
 github.com/zeebo/errs v1.2.2 h1:5NFypMTuSdoySVTqlNs1dEoU21QVamMQJxW/Fii5O7g=
 github.com/zeebo/errs v1.2.2/go.mod h1:sgbWHsvVuTPHcqJJGQ1WhI5KbWlHYz+2+2C/LSEtCw4=
+github.com/zeebo/errs/v2 v2.0.3 h1:WwqAmopgot4ZC+CgIveP+H91Nf78NDEGWjtAXen45Hw=
 github.com/zeebo/errs/v2 v2.0.3/go.mod h1:OKmvVZt4UqpyJrYFykDKm168ZquJ55pbbIVUICNmLN0=
 github.com/zeebo/float16 v0.1.0/go.mod h1:fssGvvXu+XS8MH57cKmyrLB/cqioYeYX/2mXCN3a5wo=
 github.com/zeebo/incenc v0.0.0-20180505221441-0d92902eec54/go.mod h1:EI8LcOBDlSL3POyqwC1eJhOYlMBMidES+613EtmmT5w=

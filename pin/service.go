@@ -6,6 +6,7 @@ package pin
 import (
 	"context"
 	"github.com/elek/easypin/pin/contract"
+	pindb "github.com/elek/easypin/pindb"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -26,14 +27,16 @@ type Config struct {
 //
 // architecture: Service
 type Service struct {
+	db       *pindb.PinDB
 	log      *zap.Logger
 	endpoint string
 	token    Address
 }
 
 // NewService creates new token service instance.
-func NewService(log *zap.Logger, endpoint string, token Address) *Service {
+func NewService(log *zap.Logger, db *pindb.PinDB, endpoint string, token Address) *Service {
 	return &Service{
+		db:       db,
 		log:      log,
 		endpoint: endpoint,
 		token:    token,

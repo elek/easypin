@@ -46,6 +46,11 @@ func run(ctx context.Context, config easypin.Config) error {
 		return err
 	}
 
+	err = db.MigrateToLatest(ctx)
+	if err != nil {
+		return err
+	}
+	
 	app, err := easypin.NewApp(logger.Named("easypin"), config, db)
 	if err != nil {
 		return err
