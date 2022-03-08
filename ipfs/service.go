@@ -2,7 +2,10 @@ package ipfs
 
 import (
 	"context"
+	"github.com/ipfs/go-cid"
 	httpapi "github.com/ipfs/go-ipfs-http-client"
+	"github.com/ipfs/interface-go-ipfs-core/options"
+	"github.com/ipfs/interface-go-ipfs-core/path"
 	core "github.com/libp2p/go-libp2p-core"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/zeebo/errs"
@@ -55,4 +58,33 @@ func (s *Service) GetPeers(ctx context.Context) ([]Peer, error) {
 		})
 	}
 	return res, nil
+}
+
+type Pinned struct {
+	CID  string
+	Size uint64
+}
+
+func (s *Service) Pin(ctx context.Context, CID string) (res Pinned, err error) {
+	cCID, err := cid.Parse(CID)
+	if err != nil {
+		return res, errs.Wrap(err)
+	}
+	res.CID = cCID.String()
+
+	err = s.api.Pin().Add(ctx, path.New("/ipfs/"+CID), options.Pin.Recursive(true))
+	if err != nil {
+		return res, errs.Wrap(err)
+	}
+	node, err := s.api.Dag().Get(ctx, cCID)
+	if err != nil {
+		return res, errs.Wrap(err)
+	}
+
+	res.Size, err = node.Size()
+	if err != nil {
+		return res, errs.Wrap(err)
+	}
+
+	return res, err
 }
