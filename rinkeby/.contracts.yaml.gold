@@ -1,0 +1,15 @@
+- name: GOLD
+  address: 0x39AaBAF5DebD0855908D382C81eAD5705C52Fc5a
+  abi: ../test/Gold.abi
+  type: ""
+  chainid: 4
+- name: FAUCET
+  address: 0x0d5BEf7d1FeAEaF3E28CD1d134ab17a49B9bBF38
+  abi: ../test/Faucet.abi
+  type: ""
+  chainid: 4
+- name: PIN
+  address: 0x245a6405aA8377D3cA06160E24D4eb6622a02C66
+  abi: ../contract/StorjPin.abi
+  type: ""
+  chainid: 4

@@ -1,15 +1,23 @@
 
 
-# Rinbkeby deployment
+# Rinkeby deployment
 
-ERC20 token (GOLD): [0x39AaBAF5DebD0855908D382C81eAD5705C52Fc5a](https://rinkeby.etherscan.io/address/0x39AaBAF5DebD0855908D382C81eAD5705C52Fc5a)
 
-FAUCET contract (call the `get` to get 1 TOKEN): [0x0d5BEf7d1FeAEaF3E28CD1d134ab17a49B9bBF38](https://rinkeby.etherscan.io/address/0x39AaBAF5DebD0855908D382C81eAD5705C52Fc5a)
+Rinkeby deployment uses the ZkSync Test STORJ tokens. You can mint it [here](https://wallet.zksync.io/?network=rinkeby) (Add Funds, Mint tokens, ....)
 
-PIN contract: [0x245a6405aA8377D3cA06160E24D4eb6622a02C66](https://rinkeby.etherscan.io/address/0x245a6405aA8377D3cA06160E24D4eb6622a02C66)
+Token contract [0x8098165d982765097e4aa17138816e5b95f9fdb5](https://rinkeby.etherscan.io/address/0x8098165d982765097e4aa17138816e5b95f9fdb5)
 
+PIN contract: [0x069FaE1B18F4c18852b3F07f60f82121F8A9030b](https://rinkeby.etherscan.io/address/0x069fae1b18f4c18852b3f07f60f82121f8a9030b)
 
 Deployed with:
+```
+ceth c deploy --name PIN --abi ../contract/StorjPin.abi ../contract/StorjPin.bin '(address)' STORJ 
+
+```
+
+# Local deployment
+
+You can deploy the full contract set with the following commn
 
 ```
 export CETH_ACCOUNT=...
@@ -73,7 +81,7 @@ cethacea log --contract PIN
 ```
 go run ./cmd/easypin/main.go \
    --pin.endpoint=https://mainnet.infura.io/v3/PROJECT_ID \
-   --pin.token-address 0x245a6405aA8377D3cA06160E24D4eb6622a02C66 \
+   --pin.token-address 0x069fae1b18f4c18852b3f07f60f82121f8a9030b \
    --database 'postgres://root@sd:26257/pin?sslmode=disable' \
    --api.address 127.0.0.1:8787
    --ipfs.address /ip4/127.0.0.1/tcp/5001
