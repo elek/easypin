@@ -71,11 +71,12 @@ cethacea log --contract PIN
 ## Starting the API server:
 
 ```
-go run ./cmd/easypin/main.go --pin.endpoint=http://sd:8545 \
-   --pin.token-address D3154BE2863cc6FCA8dE0F0D37a82c0cce15Fc35 \
+go run ./cmd/easypin/main.go \
+   --pin.endpoint=https://mainnet.infura.io/v3/PROJECT_ID \
+   --pin.token-address 0x245a6405aA8377D3cA06160E24D4eb6622a02C66 \
    --database 'postgres://root@sd:26257/pin?sslmode=disable' \
    --api.address 127.0.0.1:8787
-    --ipfs.address /ip4/127.0.0.1/tcp/5001
+   --ipfs.address /ip4/127.0.0.1/tcp/5001
 ```
 
 Requirements:
