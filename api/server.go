@@ -40,11 +40,12 @@ func NewServer(log *zap.Logger, listener net.Listener) *Server {
 	router := mux.NewRouter()
 	router.Name("api").PathPrefix("/api/v0")
 	router.Name("console").PathPrefix("/").Handler(http.FileServer(http.Dir("./web/dist")))
+	apiRouter := router.GetRoute("api").Subrouter()
 
 	return &Server{
 		log:      log,
 		listener: listener,
-		router:   router,
+		router:   apiRouter,
 		http: http.Server{
 			Handler: router,
 		},
@@ -53,8 +54,7 @@ func NewServer(log *zap.Logger, listener net.Listener) *Server {
 
 // NewAPI creates new API route and register endpoint methods.
 func (server *Server) NewAPI(path string, register func(*mux.Router)) {
-	apiRouter := server.router.GetRoute("api").Subrouter()
-	router := apiRouter.PathPrefix(path).Subrouter()
+	router := server.router.PathPrefix(path).Subrouter()
 	router.StrictSlash(true)
 	register(router)
 }

@@ -5,8 +5,10 @@ package easypin
 
 import (
 	"context"
+	"github.com/elek/easypin/ipfs"
 	"github.com/elek/easypin/pin"
 	pindb "github.com/elek/easypin/pindb"
+	"github.com/zeebo/errs"
 	"net"
 	"storj.io/storjscan/tokens"
 
@@ -26,6 +28,7 @@ type Config struct {
 	Debug debug.Config
 	Pin   pin.Config
 	API   api.Config
+	IPFS  ipfs.Config
 }
 
 // DB is a collection of storjscan databases.
@@ -56,6 +59,11 @@ type App struct {
 		Listener net.Listener
 		Server   *api.Server
 	}
+
+	IPFS struct {
+		Service  *ipfs.Service
+		Endpoint *ipfs.Endpoint
+	}
 }
 
 // NewApp creates new storjscan application instance.
@@ -65,6 +73,19 @@ func NewApp(log *zap.Logger, config Config, db DB) (*App, error) {
 		DB:       db,
 		Services: lifecycle.NewGroup(log.Named("services")),
 		Servers:  lifecycle.NewGroup(log.Named("servers")),
+	}
+
+	{ // IPFS
+		var err error
+
+		if config.IPFS.Address == "" {
+			return nil, errs.New("IPFS node address is empty")
+		}
+		app.IPFS.Service, err = ipfs.NewService(log.Named("ipfs:service"), config.IPFS.Address)
+		if err != nil {
+			return nil, err
+		}
+		app.IPFS.Endpoint = ipfs.NewEndpoint(log.Named("ipfs:endpoint"), app.IPFS.Service)
 	}
 
 	{ // pin
@@ -99,6 +120,7 @@ func NewApp(log *zap.Logger, config Config, db DB) (*App, error) {
 
 		app.API.Server = api.NewServer(log.Named("api:server"), app.API.Listener)
 		app.API.Server.NewAPI("/pin", app.Pin.Endpoint.Register)
+		app.API.Server.NewAPI("/ipfs", app.IPFS.Endpoint.Register)
 
 		app.Servers.Add(lifecycle.Item{
 			Name:  "api",
