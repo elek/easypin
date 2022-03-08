@@ -2,6 +2,7 @@ package pin
 
 import (
 	"context"
+	"github.com/elek/easypin/ipfs"
 	"github.com/elek/easypin/pin/contract"
 	"github.com/elek/easypin/pindb"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -9,26 +10,31 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	errs "github.com/zeebo/errs/v2"
 	"go.uber.org/zap"
+	"math/big"
 	"storj.io/common/sync2"
 	"time"
 )
 
 // Chore persists new on-chain events to the db
 type Chore struct {
-	db       *pindb.PinDB
-	log      *zap.Logger
-	endpoint string
-	contract string
-	Loop     *sync2.Cycle
+	db           *pindb.PinDB
+	log          *zap.Logger
+	endpoint     string
+	contract     string
+	Loop         *sync2.Cycle
+	IPFS         *ipfs.Service
+	ByteDayPrice *big.Int //price in raw token(1e-18) / unit(=1byte) / month
 }
 
-func NewChore(log *zap.Logger, db *pindb.PinDB, endpoint string, contract string) *Chore {
+func NewChore(log *zap.Logger, db *pindb.PinDB, service *ipfs.Service, endpoint string, contract string) *Chore {
 	return &Chore{
-		log:      log,
-		db:       db,
-		endpoint: endpoint,
-		contract: contract,
-		Loop:     sync2.NewCycle(1 * time.Minute),
+		log:          log,
+		db:           db,
+		endpoint:     endpoint,
+		contract:     contract,
+		Loop:         sync2.NewCycle(1 * time.Minute),
+		IPFS:         service,
+		ByteDayPrice: big.NewInt(133333), // 4 USD / 1 TB (1E12) * token unit (1E18) / 1 USD/STORJ / 30 days
 	}
 }
 
@@ -98,17 +104,38 @@ func (c *Chore) PinMissing(ctx context.Context) (err error) {
 		return err
 	}
 	for _, p := range pins {
-		c.log.Info("Oh, let me pin", zap.String("cid", p.Cid))
-		//TODO calculate the exact period
-		until := time.Now().Add(7 * time.Hour * 24)
+		c.log.Info("Pinning new IPFS entry", zap.String("cid", p.Cid))
 
-		//TODO pin the cid
-
-		err := c.db.CreateNode(ctx, p.Cid, until, p.Amount)
+		err := c.Pin(ctx, p.Cid, p.Amount)
 		if err != nil {
-			c.log.Error("Couldn't pin the CID", zap.String("cid", p.Cid), zap.Error(err))
+			c.log.Error("Pinning is failed", zap.String("cid", p.Cid), zap.Error(err))
 		}
-		c.log.Error("IPFS Cid is pinned", zap.String("cid", p.Cid), zap.Time("until", until))
 	}
 	return nil
+}
+
+//TODO int64 is enough only for 18 TOKEN!!!
+func (c *Chore) Pin(ctx context.Context, cid string, amount int64) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
+	pinned, err := c.IPFS.Pin(ctx, cid)
+	if err != nil {
+		return err
+	}
+
+	until := calculateUntil(time.Now(), c.ByteDayPrice, big.NewInt(amount), pinned.Size)
+
+	err = c.db.CreateNode(ctx, cid, until, amount)
+	if err != nil {
+		return err
+	}
+	c.log.Error("IPFS Cid is pinned", zap.String("cid", cid), zap.Time("until", until))
+	return nil
+}
+
+func calculateUntil(from time.Time, basePrice *big.Int, paidToken *big.Int, size uint64) time.Time {
+	pricePerDay := new(big.Int).Mul(basePrice, big.NewInt(int64(size)))
+	paidSeconds := new(big.Int).Div(new(big.Int).Mul(paidToken, big.NewInt(24*60*60)), pricePerDay)
+	return from.Add(time.Duration(paidSeconds.Int64()) * time.Second)
 }
