@@ -75,7 +75,14 @@ go run ./cmd/easypin/main.go --pin.endpoint=http://sd:8545 \
    --pin.token-address D3154BE2863cc6FCA8dE0F0D37a82c0cce15Fc35 \
    --database 'postgres://root@sd:26257/pin?sslmode=disable' \
    --api.address 127.0.0.1:8787
+    --ipfs.address /ip4/127.0.0.1/tcp/5001
 ```
+
+Requirements:
+
+ 1. Working ethereum node where contracts are deployed (you can use infura rinkeby URL or a local chain from `./testchain`)
+ 2. Cockroach (or postgres). Please create the scheme (`pin` in our example)
+ 3. Running IPFS node (`ipfs daemon`) 
 
 ```
 curl localhost:8787/api/v0/pin/all
