@@ -103,7 +103,7 @@ func NewApp(log *zap.Logger, config Config, db DB) (*App, error) {
 	}
 
 	{
-		chore := pin.NewChore(log.Named("persister:core"), db.Pins(), config.Pin.Endpoint, config.Pin.TokenAddress)
+		chore := pin.NewChore(log.Named("persister:core"), db.Pins(), app.IPFS.Service, config.Pin.Endpoint, config.Pin.TokenAddress)
 		app.Services.Add(lifecycle.Item{
 			Name:  "persister:chore",
 			Run:   chore.Run,
