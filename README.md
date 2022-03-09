@@ -116,3 +116,10 @@ npm build
 ```
 
 It saves the final artifacts to `web/dist` which is exposed by the golang api.
+
+#web3 - React app using metamask
+`npm install` to get up and running
+### `npm start`
+
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
