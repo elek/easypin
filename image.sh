@@ -6,4 +6,6 @@ cd -
 cd web
 npx vite build
 cd -
-docker build -t ghcr.io/elek/easypin .
+TAG=$(git log -n 1 --pretty=format:"%h")
+docker build -t ghcr.io/elek/easypin:$TAG .
+

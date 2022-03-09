@@ -39,6 +39,9 @@ type Server struct {
 func NewServer(log *zap.Logger, listener net.Listener) *Server {
 	router := mux.NewRouter()
 	router.Name("api").PathPrefix("/api/v0")
+	router.Name("pin").PathPrefix("/pin").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./web/dist/index.html")
+	})
 	router.Name("console").PathPrefix("/").Handler(http.FileServer(http.Dir("./web/dist")))
 	apiRouter := router.GetRoute("api").Subrouter()
 
