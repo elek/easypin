@@ -10,9 +10,9 @@ Token contract [0x8098165d982765097e4aa17138816e5b95f9fdb5](https://rinkeby.ethe
 PIN contract: [0x069FaE1B18F4c18852b3F07f60f82121F8A9030b](https://rinkeby.etherscan.io/address/0x069fae1b18f4c18852b3f07f60f82121f8a9030b)
 
 Deployed with:
+
 ```
 ceth c deploy --name PIN --abi ../contract/StorjPin.abi ../contract/StorjPin.bin '(address)' STORJ 
-
 ```
 
 # Local deployment

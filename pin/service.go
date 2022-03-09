@@ -19,27 +19,30 @@ var ErrService = errs.Class("pin service")
 
 // Config holds pin service configuration.
 type Config struct {
-	Endpoint     string
-	TokenAddress string
+	EthereumEndpoint string
+	TokenContract    string
+	PinContract      string
 }
 
 // Service for querying ERC20 token information from ethereum chain.
 //
 // architecture: Service
 type Service struct {
-	db       *pindb.PinDB
-	log      *zap.Logger
-	endpoint string
-	token    Address
+	db            *pindb.PinDB
+	log           *zap.Logger
+	endpoint      string
+	pinContract   Address
+	tokenContract Address
 }
 
 // NewService creates new token service instance.
-func NewService(log *zap.Logger, db *pindb.PinDB, endpoint string, token Address) *Service {
+func NewService(log *zap.Logger, db *pindb.PinDB, endpoint string, token Address, pin Address) *Service {
 	return &Service{
-		db:       db,
-		log:      log,
-		endpoint: endpoint,
-		token:    token,
+		db:            db,
+		log:           log,
+		endpoint:      endpoint,
+		pinContract:   pin,
+		tokenContract: token,
 	}
 }
 
@@ -53,7 +56,7 @@ func (service *Service) Pins(ctx context.Context) (_ []Pin, err error) {
 	}
 	defer client.Close()
 
-	pin, err := contract.NewStorjPin(service.token, client)
+	pin, err := contract.NewStorjPin(service.pinContract, client)
 	if err != nil {
 		return nil, ErrService.Wrap(err)
 	}
@@ -82,7 +85,8 @@ func (service *Service) Pins(ctx context.Context) (_ []Pin, err error) {
 }
 
 type WebConfig struct {
-	TokenAddress string
+	PinContract   string
+	TokenContract string
 }
 
 // Config returns the UI configuration
@@ -90,6 +94,7 @@ func (service *Service) Config(ctx context.Context) (cfg WebConfig, err error) {
 	defer mon.Task()(&ctx)(&err)
 
 	return WebConfig{
-		TokenAddress: service.token.Hex(),
+		TokenContract: service.tokenContract.Hex(),
+		PinContract:   service.pinContract.Hex(),
 	}, nil
 }

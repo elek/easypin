@@ -25,10 +25,10 @@ var mon = monkit.Package()
 
 // Config wraps storjscan configuration.
 type Config struct {
-	Debug debug.Config
-	Pin   pin.Config
-	API   api.Config
-	IPFS  ipfs.Config
+	Debug  debug.Config
+	Crypto pin.Config
+	API    api.Config
+	IPFS   ipfs.Config
 }
 
 // DB is a collection of storjscan databases.
@@ -89,21 +89,27 @@ func NewApp(log *zap.Logger, config Config, db DB) (*App, error) {
 	}
 
 	{ // pin
-		token, err := tokens.AddressFromHex(config.Pin.TokenAddress)
+		pinContract, err := tokens.AddressFromHex(config.Crypto.PinContract)
+		if err != nil {
+			return nil, err
+		}
+
+		tokenContract, err := tokens.AddressFromHex(config.Crypto.TokenContract)
 		if err != nil {
 			return nil, err
 		}
 
 		app.Pin.Service = pin.NewService(log.Named("pin:service"),
 			db.Pins(),
-			config.Pin.Endpoint,
-			token)
+			config.Crypto.EthereumEndpoint,
+			tokenContract,
+			pinContract)
 
 		app.Pin.Endpoint = pin.NewEndpoint(log.Named("pin:endpoint"), app.Pin.Service)
 	}
 
 	{
-		chore := pin.NewChore(log.Named("persister:core"), db.Pins(), app.IPFS.Service, config.Pin.Endpoint, config.Pin.TokenAddress)
+		chore := pin.NewChore(log.Named("persister:core"), db.Pins(), app.IPFS.Service, config.Crypto.EthereumEndpoint, config.Crypto.PinContract)
 		app.Services.Add(lifecycle.Item{
 			Name:  "persister:chore",
 			Run:   chore.Run,

@@ -1,23 +1,22 @@
-import {createApp, reactive} from 'vue'
-import {ethers} from "ethers";
-import App from './App.vue'
-import axios from "axios"
+import { createApp } from 'vue/dist/vue.esm-bundler.js'
+import {createRouter, createWebHashHistory} from 'vue-router'
+import Pin from "./components/Pin.vue";
+import Home from "./components/Home.vue";
 
-axios.get("/api/v0/pin/config").then(async function (config) {
-    let cfg = config.data
 
-    var accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
-    const web3 = new ethers.providers.Web3Provider(window.ethereum)
-    var currentNetwork = await web3.getNetwork()
-    window.ethereum.on("chainChanged", function () {
-        window.location.reload();
-    })
-    var address = await web3.getSigner().getAddress()
-    let app = createApp(App);
-    app.provide("$address", address)
-    app.provide("$cfg", cfg)
-    app.mount('#app');
+const routes = [
+    { path: '/', component: Home },
+    { path: '/pin', component: Pin },
+]
 
+
+const router = createRouter({
+    history: createWebHashHistory(),
+    routes,
 })
 
-
+// 5. Create and mount the root instance.
+const app = createApp({
+}).
+   use(router).
+   mount('#app')

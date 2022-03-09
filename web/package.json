@@ -8,11 +8,13 @@
   },
   "dependencies": {
     "ethers": "^5.5.1",
-    "vue": "^3.2.16"
+    "vue": "^3.2.16",
+    "vue-router": "^4.0.13"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^1.9.3",
     "axios": "^0.24.0",
+    "sass": "^1.49.9",
     "vite": "^2.6.4"
   }
 }
