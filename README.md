@@ -112,7 +112,7 @@ Production version:
 
 ```
 cd web
-npm build
+npx vite build
 ```
 
 It saves the final artifacts to `web/dist` which is exposed by the golang api.

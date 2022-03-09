@@ -60,7 +60,7 @@ var approve = function () {
 
 var pin = function () {
   if (cid.value === "") {
-    message.value = "Please define a cid"
+    message.value = "Please define a hash"
     return
   }
   var signer = provider.getSigner(account.value)
@@ -84,11 +84,11 @@ var connect = function () {
 
 <template>
   <form class="form-signin">
-    <h1 class="h3 mb-3 font-weight-normal">Pin your IPFS CID {{ allowance }} </h1>
+    <h1 class="h3 mb-3 font-weight-normal">Pin your IPFS hash {{ allowance }} </h1>
 
     <p>{{ message }}</p>
 
-    <input v-model="cid" type="text" id="inputAmount" class="mb-3 form-control" placeholder="IPFS CID"
+    <input v-model="cid" type="text" id="inputAmount" class="mb-3 form-control" placeholder="IPFS hash"
            required autofocus>
 
     <button v-if="!account" type="button"

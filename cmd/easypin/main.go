@@ -29,7 +29,7 @@ func main() {
 	pflag.Parse()
 
 	if err := run(context.Background(), Flags.Config); err != nil {
-		log.Fatal(err)
+		log.Fatalf("%++v", err)
 	}
 }
 
@@ -50,7 +50,7 @@ func run(ctx context.Context, config easypin.Config) error {
 	if err != nil {
 		return err
 	}
-	
+
 	app, err := easypin.NewApp(logger.Named("easypin"), config, db)
 	if err != nil {
 		return err
