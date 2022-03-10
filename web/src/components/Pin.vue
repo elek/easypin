@@ -19,15 +19,30 @@ var defaultAllowance = BigNumber.from("10000000000")
 
 const provider = new ethers.providers.Web3Provider(window.ethereum)
 
-const tokenAbi = [
-  "function transfer(address to, uint amount) returns (bool)",
-  "function allowance(address owner, address spender) view returns (uint256)",
-  "function approve(address spender, uint256 amount) returns (bool)",
-  "function balanceOf(address acc) view returns (uint256)"];
+// The ERC-20 Contract ABI, which is a common contract interface
+// for tokens (this is the Human-Readable ABI format)
+const storjTokenAbi = [
+  // Some details about the token
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
 
-var pinAbi = [
-  "function pin(string cid,uint amount) returns ()"
-]
+  // Get the account balance
+  "function balanceOf(address) view returns (uint)",
+
+  // Get the allowance
+  "function allowance(address owner, address spender) view returns (uint)",
+
+  // Approve token for use
+  "function approve(address to, uint amount)",
+
+  // An event triggered whenever anyone transfers to someone else
+  //"event Transfer(address indexed from, address indexed to, uint amount)"
+];
+
+const pinAbi = [
+  // Pin to IPFS
+  "function pin(string ipfsHash, uint amount)",
+];
 
 var price = function (d) {
   if (d.value === 200) {
@@ -98,26 +113,7 @@ var connect = function () {
 }
 
 var tokenStr = function (a) {
-  var out = ""
-  var raw = a.toString()
-  var dec = 8
-  for (var i = raw.length - 1; i >= 0; i--) {
-    if (dec === 0 && out.length > 0) {
-      out = "." + out
-    }
-
-    if (out.length > 0 || dec <= 0 || raw[i] !== "0") {
-      out = raw[i] + out
-    }
-    dec--
-  }
-  if (dec >= 0 && out.length > 0) {
-    out = "0." + out
-  }
-  if (out.length == 0) {
-    out = "0"
-  }
-  return out
+  return ethers.utils.formatUnits(a, 8)
 }
 
 var p = computed(() => {
