@@ -2,17 +2,20 @@
 
 pragma solidity ^0.8.0;
 
-import "Ownable.sol";
-import "ERC20.sol";
 
-contract StorjPin is Ownable {
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./IStorjPin.sol";
+
+
+contract StorjPin is IStorjPin, Ownable {
 
     event Pinned(address indexed owner, uint256 amount, string hash);
 
-    ERC20 token;
+    IERC20 token;
 
     constructor(address _tokenAddress) Ownable(){
-        token = ERC20(_tokenAddress);
+        token = IERC20(_tokenAddress);
     }
 
     function pin(string memory ipfsHash, uint256 tokenAmount) public {

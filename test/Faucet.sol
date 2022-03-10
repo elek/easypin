@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import "ERC20.sol";
-import "./Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Faucet is Ownable {
 
-    ERC20 token;
+    IERC20 token;
 
     constructor(address _tokenAddress) Ownable(){
-        token = ERC20(_tokenAddress);
+        token = IERC20(_tokenAddress);
     }
 
     function get() public {
