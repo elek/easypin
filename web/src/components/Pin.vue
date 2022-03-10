@@ -48,7 +48,7 @@ var price = function (d) {
   if (d.value === 200) {
     return BigNumber.from("2000000000")
   } else {
-    return BigNumber.from(10000000).mul(d.value)
+    return BigNumber.from(1000000).mul(d.value)
   }
 }
 var allowed = function () {
@@ -132,11 +132,11 @@ var p = computed(() => {
 
     <div class="form-check form-check-inline">
       <input class="form-check-input" type="radio" name="duration" id="1y" value="1" v-model="duration">
-      <label class="form-check-label" for="1y">1 year</label>
+      <label class="form-check-label" for="1y">1y</label>
     </div>
     <div class="form-check form-check-inline">
-      <input class="form-check-input" type="radio" name="duration" id="2y" value="2" v-model="duration">
-      <label class="form-check-label" for="2y">2 years</label>
+      <input class="form-check-input" type="radio" name="duration" id="2y" value="5" v-model="duration">
+      <label class="form-check-label" for="2y">5y</label>
     </div>
     <div class="form-check form-check-inline">
       <input class="form-check-input" type="radio" name="duration" id="forever" value="200" v-model="duration">
