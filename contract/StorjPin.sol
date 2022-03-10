@@ -10,7 +10,7 @@ import "./IStorjPin.sol";
 
 contract StorjPin is IStorjPin, Ownable {
 
-    event Pinned(address indexed owner, uint256 amount, string hash);
+    event Pinned(address indexed owner, uint256 amount, string hash, bool parse);
 
     IERC20 token;
 
@@ -18,9 +18,9 @@ contract StorjPin is IStorjPin, Ownable {
         token = IERC20(_tokenAddress);
     }
 
-    function pin(string memory ipfsHash, uint256 tokenAmount) public {
+    function pin(string memory ipfsHash, uint256 tokenAmount, bool parse) public {
         require(token.transferFrom(msg.sender, address(this), tokenAmount));
-        emit Pinned(msg.sender, tokenAmount, ipfsHash);
+        emit Pinned(msg.sender, tokenAmount, ipfsHash, parse);
     }
 
     function withdraw(address target) public onlyOwner {

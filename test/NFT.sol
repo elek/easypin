@@ -23,22 +23,23 @@ contract NFT is ERC721URIStorage, AccessControl {
         pin = IStorjPin(pinContract);
     }
 
-    function awardItem(address player, string memory tokenURI) public returns (uint256)
+    function mintNew(address owner, string memory hash) public returns (uint256)
     {
 
         require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
         _tokenIds.increment();
 
-        pin.pin(tokenURI, 10000000);
+        //please note that we pin here only the descriptor, not the referenced image
+        pin.pin(hash, 20000000, true);
         uint256 newItemId = _tokenIds.current();
-        _safeMint(player, newItemId);
-        _setTokenURI(newItemId, tokenURI);
+        _safeMint(owner, newItemId);
+        _setTokenURI(newItemId, hash);
 
         return newItemId;
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
-        return "https://gateway.ipfs.io/ipfs/";
+        return "ipfs://";
     }
 
 

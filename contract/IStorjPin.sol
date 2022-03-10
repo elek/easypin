@@ -4,6 +4,6 @@ pragma solidity ^0.8.0;
 
 interface IStorjPin {
 
-    function pin(string memory ipfsHash, uint256 tokenAmount) external;
+    function pin(string memory ipfsHash, uint256 tokenAmount, bool parse) external;
 
 }
