@@ -21,7 +21,7 @@ const provider = new ethers.providers.Web3Provider(window.ethereum)
 
 // The ERC-20 Contract ABI, which is a common contract interface
 // for tokens (this is the Human-Readable ABI format)
-const storjTokenAbi = [
+const tokenAbi = [
   // Some details about the token
   "function name() view returns (string)",
   "function symbol() view returns (string)",
