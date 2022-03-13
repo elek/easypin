@@ -32,4 +32,5 @@ type Pin struct {
 	Cid         string
 	TokenValue  *big.Int
 	Transaction Hash
+	Index       uint
 }

@@ -78,6 +78,7 @@ func (service *Service) Pins(ctx context.Context) (_ []Pin, err error) {
 			Cid:         iter.Event.Hash,
 			TokenValue:  iter.Event.Amount,
 			Transaction: iter.Event.Raw.TxHash,
+			Index:       iter.Event.Raw.Index,
 		})
 	}
 
