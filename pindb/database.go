@@ -115,6 +115,17 @@ CREATE TABLE pins (
 `,
 				},
 			},
+			{
+				DB:          &db.migrationDB,
+				Description: "Initial setup",
+				Version:     1,
+				Action: migrate.SQL{
+					`ALTER TABLE pins ADD COLUMN retry integer NOT NULL DEFAULT 0;
+					ALTER TABLE pins ADD COLUMN error text NOT NULL DEFAULT '';
+					ALTER TABLE pins ADD COLUMN parse boolean NOT NULL DEFAULT false;
+`,
+				},
+			},
 		},
 	}
 }

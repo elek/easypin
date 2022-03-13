@@ -327,6 +327,9 @@ CREATE TABLE pins (
 	tx text NOT NULL,
 	ix integer NOT NULL,
 	cid text NOT NULL,
+	retry integer NOT NULL DEFAULT 0,
+	error text NOT NULL DEFAULT '',
+	parse boolean NOT NULL DEFAULT false,
 	amount bigint NOT NULL,
 	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
 	PRIMARY KEY ( tx, ix )
@@ -404,6 +407,7 @@ type Node struct {
 func (Node) _Table() string { return "nodes" }
 
 type Node_Update_Fields struct {
+	ExpiredAt Node_ExpiredAt_Field
 }
 
 type Node_Cid_Field struct {
@@ -486,13 +490,24 @@ type Pin struct {
 	Tx        string
 	Ix        int
 	Cid       string
+	Retry     int
+	Error     string
+	Parse     bool
 	Amount    int64
 	CreatedAt time.Time
 }
 
 func (Pin) _Table() string { return "pins" }
 
+type Pin_Create_Fields struct {
+	Retry Pin_Retry_Field
+	Error Pin_Error_Field
+	Parse Pin_Parse_Field
+}
+
 type Pin_Update_Fields struct {
+	Retry Pin_Retry_Field
+	Error Pin_Error_Field
 }
 
 type Pin_Tx_Field struct {
@@ -551,6 +566,63 @@ func (f Pin_Cid_Field) value() interface{} {
 }
 
 func (Pin_Cid_Field) _Column() string { return "cid" }
+
+type Pin_Retry_Field struct {
+	_set   bool
+	_null  bool
+	_value int
+}
+
+func Pin_Retry(v int) Pin_Retry_Field {
+	return Pin_Retry_Field{_set: true, _value: v}
+}
+
+func (f Pin_Retry_Field) value() interface{} {
+	if !f._set || f._null {
+		return nil
+	}
+	return f._value
+}
+
+func (Pin_Retry_Field) _Column() string { return "retry" }
+
+type Pin_Error_Field struct {
+	_set   bool
+	_null  bool
+	_value string
+}
+
+func Pin_Error(v string) Pin_Error_Field {
+	return Pin_Error_Field{_set: true, _value: v}
+}
+
+func (f Pin_Error_Field) value() interface{} {
+	if !f._set || f._null {
+		return nil
+	}
+	return f._value
+}
+
+func (Pin_Error_Field) _Column() string { return "error" }
+
+type Pin_Parse_Field struct {
+	_set   bool
+	_null  bool
+	_value bool
+}
+
+func Pin_Parse(v bool) Pin_Parse_Field {
+	return Pin_Parse_Field{_set: true, _value: v}
+}
+
+func (f Pin_Parse_Field) value() interface{} {
+	if !f._set || f._null {
+		return nil
+	}
+	return f._value
+}
+
+func (Pin_Parse_Field) _Column() string { return "parse" }
 
 type Pin_Amount_Field struct {
 	_set   bool
@@ -1014,7 +1086,8 @@ func (obj *pgxImpl) Create_Pin(ctx context.Context,
 	pin_tx Pin_Tx_Field,
 	pin_ix Pin_Ix_Field,
 	pin_cid Pin_Cid_Field,
-	pin_amount Pin_Amount_Field) (
+	pin_amount Pin_Amount_Field,
+	optional Pin_Create_Fields) (
 	pin *Pin, err error) {
 	defer mon.Task()(&ctx)(&err)
 	__tx_val := pin_tx.value()
@@ -1026,16 +1099,45 @@ func (obj *pgxImpl) Create_Pin(ctx context.Context,
 	var __placeholders = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("?, ?, ?, ?")}
 	var __clause = &__sqlbundle_Hole{SQL: __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("("), __columns, __sqlbundle_Literal(") VALUES ("), __placeholders, __sqlbundle_Literal(")")}}}
 
-	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("INSERT INTO pins "), __clause, __sqlbundle_Literal(" RETURNING pins.tx, pins.ix, pins.cid, pins.amount, pins.created_at")}}
+	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("INSERT INTO pins "), __clause, __sqlbundle_Literal(" RETURNING pins.tx, pins.ix, pins.cid, pins.retry, pins.error, pins.parse, pins.amount, pins.created_at")}}
 
 	var __values []interface{}
 	__values = append(__values, __tx_val, __ix_val, __cid_val, __amount_val)
 
+	__optional_columns := __sqlbundle_Literals{Join: ", "}
+	__optional_placeholders := __sqlbundle_Literals{Join: ", "}
+
+	if optional.Retry._set {
+		__values = append(__values, optional.Retry.value())
+		__optional_columns.SQLs = append(__optional_columns.SQLs, __sqlbundle_Literal("retry"))
+		__optional_placeholders.SQLs = append(__optional_placeholders.SQLs, __sqlbundle_Literal("?"))
+	}
+
+	if optional.Error._set {
+		__values = append(__values, optional.Error.value())
+		__optional_columns.SQLs = append(__optional_columns.SQLs, __sqlbundle_Literal("error"))
+		__optional_placeholders.SQLs = append(__optional_placeholders.SQLs, __sqlbundle_Literal("?"))
+	}
+
+	if optional.Parse._set {
+		__values = append(__values, optional.Parse.value())
+		__optional_columns.SQLs = append(__optional_columns.SQLs, __sqlbundle_Literal("parse"))
+		__optional_placeholders.SQLs = append(__optional_placeholders.SQLs, __sqlbundle_Literal("?"))
+	}
+
+	if len(__optional_columns.SQLs) == 0 {
+		if __columns.SQL == nil {
+			__clause.SQL = __sqlbundle_Literal("DEFAULT VALUES")
+		}
+	} else {
+		__columns.SQL = __sqlbundle_Literals{Join: ", ", SQLs: []__sqlbundle_SQL{__columns.SQL, __optional_columns}}
+		__placeholders.SQL = __sqlbundle_Literals{Join: ", ", SQLs: []__sqlbundle_SQL{__placeholders.SQL, __optional_placeholders}}
+	}
 	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
 	obj.logStmt(__stmt, __values...)
 
 	pin = &Pin{}
-	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&pin.Tx, &pin.Ix, &pin.Cid, &pin.Amount, &pin.CreatedAt)
+	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&pin.Tx, &pin.Ix, &pin.Cid, &pin.Retry, &pin.Error, &pin.Parse, &pin.Amount, &pin.CreatedAt)
 	if err != nil {
 		return nil, obj.makeErr(err)
 	}
@@ -1079,7 +1181,7 @@ func (obj *pgxImpl) Get_Pin_By_Cid(ctx context.Context,
 	pin *Pin, err error) {
 	defer mon.Task()(&ctx)(&err)
 
-	var __embed_stmt = __sqlbundle_Literal("SELECT pins.tx, pins.ix, pins.cid, pins.amount, pins.created_at FROM pins WHERE pins.cid = ? LIMIT 2")
+	var __embed_stmt = __sqlbundle_Literal("SELECT pins.tx, pins.ix, pins.cid, pins.retry, pins.error, pins.parse, pins.amount, pins.created_at FROM pins WHERE pins.cid = ? LIMIT 2")
 
 	var __values []interface{}
 	__values = append(__values, pin_cid.value())
@@ -1103,7 +1205,7 @@ func (obj *pgxImpl) Get_Pin_By_Cid(ctx context.Context,
 			}
 
 			pin = &Pin{}
-			err = __rows.Scan(&pin.Tx, &pin.Ix, &pin.Cid, &pin.Amount, &pin.CreatedAt)
+			err = __rows.Scan(&pin.Tx, &pin.Ix, &pin.Cid, &pin.Retry, &pin.Error, &pin.Parse, &pin.Amount, &pin.CreatedAt)
 			if err != nil {
 				return nil, err
 			}
@@ -1130,6 +1232,182 @@ func (obj *pgxImpl) Get_Pin_By_Cid(ctx context.Context,
 		return pin, nil
 	}
 
+}
+
+func (obj *pgxImpl) All_Pin_OrderBy_Desc_CreatedAt(ctx context.Context) (
+	rows []*Pin, err error) {
+	defer mon.Task()(&ctx)(&err)
+
+	var __embed_stmt = __sqlbundle_Literal("SELECT pins.tx, pins.ix, pins.cid, pins.retry, pins.error, pins.parse, pins.amount, pins.created_at FROM pins ORDER BY pins.created_at DESC")
+
+	var __values []interface{}
+
+	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
+	obj.logStmt(__stmt, __values...)
+
+	for {
+		rows, err = func() (rows []*Pin, err error) {
+			__rows, err := obj.driver.QueryContext(ctx, __stmt, __values...)
+			if err != nil {
+				return nil, err
+			}
+			defer __rows.Close()
+
+			for __rows.Next() {
+				pin := &Pin{}
+				err = __rows.Scan(&pin.Tx, &pin.Ix, &pin.Cid, &pin.Retry, &pin.Error, &pin.Parse, &pin.Amount, &pin.CreatedAt)
+				if err != nil {
+					return nil, err
+				}
+				rows = append(rows, pin)
+			}
+			if err := __rows.Err(); err != nil {
+				return nil, err
+			}
+			return rows, nil
+		}()
+		if err != nil {
+			if obj.shouldRetry(err) {
+				continue
+			}
+			return nil, obj.makeErr(err)
+		}
+		return rows, nil
+	}
+
+}
+
+func (obj *pgxImpl) All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
+	pin_cid Pin_Cid_Field) (
+	rows []*Pin, err error) {
+	defer mon.Task()(&ctx)(&err)
+
+	var __embed_stmt = __sqlbundle_Literal("SELECT pins.tx, pins.ix, pins.cid, pins.retry, pins.error, pins.parse, pins.amount, pins.created_at FROM pins WHERE pins.cid = ? ORDER BY pins.created_at DESC")
+
+	var __values []interface{}
+	__values = append(__values, pin_cid.value())
+
+	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
+	obj.logStmt(__stmt, __values...)
+
+	for {
+		rows, err = func() (rows []*Pin, err error) {
+			__rows, err := obj.driver.QueryContext(ctx, __stmt, __values...)
+			if err != nil {
+				return nil, err
+			}
+			defer __rows.Close()
+
+			for __rows.Next() {
+				pin := &Pin{}
+				err = __rows.Scan(&pin.Tx, &pin.Ix, &pin.Cid, &pin.Retry, &pin.Error, &pin.Parse, &pin.Amount, &pin.CreatedAt)
+				if err != nil {
+					return nil, err
+				}
+				rows = append(rows, pin)
+			}
+			if err := __rows.Err(); err != nil {
+				return nil, err
+			}
+			return rows, nil
+		}()
+		if err != nil {
+			if obj.shouldRetry(err) {
+				continue
+			}
+			return nil, obj.makeErr(err)
+		}
+		return rows, nil
+	}
+
+}
+
+func (obj *pgxImpl) Update_Pin_By_Tx_And_Ix(ctx context.Context,
+	pin_tx Pin_Tx_Field,
+	pin_ix Pin_Ix_Field,
+	update Pin_Update_Fields) (
+	pin *Pin, err error) {
+	defer mon.Task()(&ctx)(&err)
+	var __sets = &__sqlbundle_Hole{}
+
+	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("UPDATE pins SET "), __sets, __sqlbundle_Literal(" WHERE pins.tx = ? AND pins.ix = ? RETURNING pins.tx, pins.ix, pins.cid, pins.retry, pins.error, pins.parse, pins.amount, pins.created_at")}}
+
+	__sets_sql := __sqlbundle_Literals{Join: ", "}
+	var __values []interface{}
+	var __args []interface{}
+
+	if update.Retry._set {
+		__values = append(__values, update.Retry.value())
+		__sets_sql.SQLs = append(__sets_sql.SQLs, __sqlbundle_Literal("retry = ?"))
+	}
+
+	if update.Error._set {
+		__values = append(__values, update.Error.value())
+		__sets_sql.SQLs = append(__sets_sql.SQLs, __sqlbundle_Literal("error = ?"))
+	}
+
+	if len(__sets_sql.SQLs) == 0 {
+		return nil, emptyUpdate()
+	}
+
+	__args = append(__args, pin_tx.value(), pin_ix.value())
+
+	__values = append(__values, __args...)
+	__sets.SQL = __sets_sql
+
+	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
+	obj.logStmt(__stmt, __values...)
+
+	pin = &Pin{}
+	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&pin.Tx, &pin.Ix, &pin.Cid, &pin.Retry, &pin.Error, &pin.Parse, &pin.Amount, &pin.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, obj.makeErr(err)
+	}
+	return pin, nil
+}
+
+func (obj *pgxImpl) Update_Node_By_Cid(ctx context.Context,
+	node_cid Node_Cid_Field,
+	update Node_Update_Fields) (
+	node *Node, err error) {
+	defer mon.Task()(&ctx)(&err)
+	var __sets = &__sqlbundle_Hole{}
+
+	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("UPDATE nodes SET "), __sets, __sqlbundle_Literal(" WHERE nodes.cid = ? RETURNING nodes.cid, nodes.expired_at, nodes.amount, nodes.created_at")}}
+
+	__sets_sql := __sqlbundle_Literals{Join: ", "}
+	var __values []interface{}
+	var __args []interface{}
+
+	if update.ExpiredAt._set {
+		__values = append(__values, update.ExpiredAt.value())
+		__sets_sql.SQLs = append(__sets_sql.SQLs, __sqlbundle_Literal("expired_at = ?"))
+	}
+
+	if len(__sets_sql.SQLs) == 0 {
+		return nil, emptyUpdate()
+	}
+
+	__args = append(__args, node_cid.value())
+
+	__values = append(__values, __args...)
+	__sets.SQL = __sets_sql
+
+	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
+	obj.logStmt(__stmt, __values...)
+
+	node = &Node{}
+	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&node.Cid, &node.ExpiredAt, &node.Amount, &node.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, obj.makeErr(err)
+	}
+	return node, nil
 }
 
 func (impl pgxImpl) isConstraintError(err error) (
@@ -1213,6 +1491,25 @@ func (rx *Rx) Rollback() (err error) {
 	return err
 }
 
+func (rx *Rx) All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
+	pin_cid Pin_Cid_Field) (
+	rows []*Pin, err error) {
+	var tx *Tx
+	if tx, err = rx.getTx(ctx); err != nil {
+		return
+	}
+	return tx.All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx, pin_cid)
+}
+
+func (rx *Rx) All_Pin_OrderBy_Desc_CreatedAt(ctx context.Context) (
+	rows []*Pin, err error) {
+	var tx *Tx
+	if tx, err = rx.getTx(ctx); err != nil {
+		return
+	}
+	return tx.All_Pin_OrderBy_Desc_CreatedAt(ctx)
+}
+
 func (rx *Rx) Create_Node(ctx context.Context,
 	node_cid Node_Cid_Field,
 	node_expired_at Node_ExpiredAt_Field,
@@ -1230,13 +1527,14 @@ func (rx *Rx) Create_Pin(ctx context.Context,
 	pin_tx Pin_Tx_Field,
 	pin_ix Pin_Ix_Field,
 	pin_cid Pin_Cid_Field,
-	pin_amount Pin_Amount_Field) (
+	pin_amount Pin_Amount_Field,
+	optional Pin_Create_Fields) (
 	pin *Pin, err error) {
 	var tx *Tx
 	if tx, err = rx.getTx(ctx); err != nil {
 		return
 	}
-	return tx.Create_Pin(ctx, pin_tx, pin_ix, pin_cid, pin_amount)
+	return tx.Create_Pin(ctx, pin_tx, pin_ix, pin_cid, pin_amount, optional)
 
 }
 
@@ -1250,7 +1548,37 @@ func (rx *Rx) Get_Pin_By_Cid(ctx context.Context,
 	return tx.Get_Pin_By_Cid(ctx, pin_cid)
 }
 
+func (rx *Rx) Update_Node_By_Cid(ctx context.Context,
+	node_cid Node_Cid_Field,
+	update Node_Update_Fields) (
+	node *Node, err error) {
+	var tx *Tx
+	if tx, err = rx.getTx(ctx); err != nil {
+		return
+	}
+	return tx.Update_Node_By_Cid(ctx, node_cid, update)
+}
+
+func (rx *Rx) Update_Pin_By_Tx_And_Ix(ctx context.Context,
+	pin_tx Pin_Tx_Field,
+	pin_ix Pin_Ix_Field,
+	update Pin_Update_Fields) (
+	pin *Pin, err error) {
+	var tx *Tx
+	if tx, err = rx.getTx(ctx); err != nil {
+		return
+	}
+	return tx.Update_Pin_By_Tx_And_Ix(ctx, pin_tx, pin_ix, update)
+}
+
 type Methods interface {
+	All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
+		pin_cid Pin_Cid_Field) (
+		rows []*Pin, err error)
+
+	All_Pin_OrderBy_Desc_CreatedAt(ctx context.Context) (
+		rows []*Pin, err error)
+
 	Create_Node(ctx context.Context,
 		node_cid Node_Cid_Field,
 		node_expired_at Node_ExpiredAt_Field,
@@ -1261,11 +1589,23 @@ type Methods interface {
 		pin_tx Pin_Tx_Field,
 		pin_ix Pin_Ix_Field,
 		pin_cid Pin_Cid_Field,
-		pin_amount Pin_Amount_Field) (
+		pin_amount Pin_Amount_Field,
+		optional Pin_Create_Fields) (
 		pin *Pin, err error)
 
 	Get_Pin_By_Cid(ctx context.Context,
 		pin_cid Pin_Cid_Field) (
+		pin *Pin, err error)
+
+	Update_Node_By_Cid(ctx context.Context,
+		node_cid Node_Cid_Field,
+		update Node_Update_Fields) (
+		node *Node, err error)
+
+	Update_Pin_By_Tx_And_Ix(ctx context.Context,
+		pin_tx Pin_Tx_Field,
+		pin_ix Pin_Ix_Field,
+		update Pin_Update_Fields) (
 		pin *Pin, err error)
 }
 

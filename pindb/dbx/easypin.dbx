@@ -5,6 +5,9 @@ model pin (
     field tx text
     field ix int
     field cid text
+    field retry int (updatable, default 0)
+    field error text (updatable, default "")
+    field parse bool (default false)
     field amount int64
     field created_at timestamp ( autoinsert, default current_timestamp )
 )
@@ -16,13 +19,28 @@ read one (
     where pin.cid = ?
 )
 
+read all (
+   select pin
+   orderby desc pin.created_at
+)
+
+read all (
+   select pin
+   where pin.cid = ?
+   orderby desc pin.created_at
+)
+
+update pin ( where pin.tx = ?, where pin.ix = ? )
+
 //--- ipfs nodes to be pinned ---//
 model node (
     key cid
     field cid text
-    field expired_at timestamp
+    field expired_at timestamp (updatable)
     field amount int64
     field created_at timestamp ( autoinsert, default current_timestamp )
 )
 
 create node ( )
+
+update node ( where node.cid = ? )

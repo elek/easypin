@@ -30,7 +30,7 @@ var (
 
 // StorjPinMetaData contains all meta data concerning the StorjPin contract.
 var StorjPinMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_tokenAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"hash\",\"type\":\"string\"}],\"name\":\"Pinned\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"ipfsHash\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"pin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"withdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_tokenAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"hash\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"parse\",\"type\":\"bool\"}],\"name\":\"Pinned\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"ipfsHash\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"tokenAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"parse\",\"type\":\"bool\"}],\"name\":\"pin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"withdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // StorjPinABI is the input ABI used to generate the binding from.
@@ -210,25 +210,25 @@ func (_StorjPin *StorjPinCallerSession) Owner() (common.Address, error) {
 	return _StorjPin.Contract.Owner(&_StorjPin.CallOpts)
 }
 
-// Pin is a paid mutator transaction binding the contract method 0xb12bccdc.
+// Pin is a paid mutator transaction binding the contract method 0xdec07c35.
 //
-// Solidity: function pin(string ipfsHash, uint256 amount) returns()
-func (_StorjPin *StorjPinTransactor) Pin(opts *bind.TransactOpts, ipfsHash string, amount *big.Int) (*types.Transaction, error) {
-	return _StorjPin.contract.Transact(opts, "pin", ipfsHash, amount)
+// Solidity: function pin(string ipfsHash, uint256 tokenAmount, bool parse) returns()
+func (_StorjPin *StorjPinTransactor) Pin(opts *bind.TransactOpts, ipfsHash string, tokenAmount *big.Int, parse bool) (*types.Transaction, error) {
+	return _StorjPin.contract.Transact(opts, "pin", ipfsHash, tokenAmount, parse)
 }
 
-// Pin is a paid mutator transaction binding the contract method 0xb12bccdc.
+// Pin is a paid mutator transaction binding the contract method 0xdec07c35.
 //
-// Solidity: function pin(string ipfsHash, uint256 amount) returns()
-func (_StorjPin *StorjPinSession) Pin(ipfsHash string, amount *big.Int) (*types.Transaction, error) {
-	return _StorjPin.Contract.Pin(&_StorjPin.TransactOpts, ipfsHash, amount)
+// Solidity: function pin(string ipfsHash, uint256 tokenAmount, bool parse) returns()
+func (_StorjPin *StorjPinSession) Pin(ipfsHash string, tokenAmount *big.Int, parse bool) (*types.Transaction, error) {
+	return _StorjPin.Contract.Pin(&_StorjPin.TransactOpts, ipfsHash, tokenAmount, parse)
 }
 
-// Pin is a paid mutator transaction binding the contract method 0xb12bccdc.
+// Pin is a paid mutator transaction binding the contract method 0xdec07c35.
 //
-// Solidity: function pin(string ipfsHash, uint256 amount) returns()
-func (_StorjPin *StorjPinTransactorSession) Pin(ipfsHash string, amount *big.Int) (*types.Transaction, error) {
-	return _StorjPin.Contract.Pin(&_StorjPin.TransactOpts, ipfsHash, amount)
+// Solidity: function pin(string ipfsHash, uint256 tokenAmount, bool parse) returns()
+func (_StorjPin *StorjPinTransactorSession) Pin(ipfsHash string, tokenAmount *big.Int, parse bool) (*types.Transaction, error) {
+	return _StorjPin.Contract.Pin(&_StorjPin.TransactOpts, ipfsHash, tokenAmount, parse)
 }
 
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
@@ -519,12 +519,13 @@ type StorjPinPinned struct {
 	Owner  common.Address
 	Amount *big.Int
 	Hash   string
+	Parse  bool
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterPinned is a free log retrieval operation binding the contract event 0x85561f033dbb8e95200074359c8fd98394baf815e48f165c48d15acba30902d6.
+// FilterPinned is a free log retrieval operation binding the contract event 0x8ddc817a12aa59f9ca11b2f6d77f8e9bfedc970fe043fde2530971d66753dbd5.
 //
-// Solidity: event Pinned(address indexed owner, uint256 amount, string hash)
+// Solidity: event Pinned(address indexed owner, uint256 amount, string hash, bool parse)
 func (_StorjPin *StorjPinFilterer) FilterPinned(opts *bind.FilterOpts, owner []common.Address) (*StorjPinPinnedIterator, error) {
 
 	var ownerRule []interface{}
@@ -539,9 +540,9 @@ func (_StorjPin *StorjPinFilterer) FilterPinned(opts *bind.FilterOpts, owner []c
 	return &StorjPinPinnedIterator{contract: _StorjPin.contract, event: "Pinned", logs: logs, sub: sub}, nil
 }
 
-// WatchPinned is a free log subscription operation binding the contract event 0x85561f033dbb8e95200074359c8fd98394baf815e48f165c48d15acba30902d6.
+// WatchPinned is a free log subscription operation binding the contract event 0x8ddc817a12aa59f9ca11b2f6d77f8e9bfedc970fe043fde2530971d66753dbd5.
 //
-// Solidity: event Pinned(address indexed owner, uint256 amount, string hash)
+// Solidity: event Pinned(address indexed owner, uint256 amount, string hash, bool parse)
 func (_StorjPin *StorjPinFilterer) WatchPinned(opts *bind.WatchOpts, sink chan<- *StorjPinPinned, owner []common.Address) (event.Subscription, error) {
 
 	var ownerRule []interface{}
@@ -581,9 +582,9 @@ func (_StorjPin *StorjPinFilterer) WatchPinned(opts *bind.WatchOpts, sink chan<-
 	}), nil
 }
 
-// ParsePinned is a log parse operation binding the contract event 0x85561f033dbb8e95200074359c8fd98394baf815e48f165c48d15acba30902d6.
+// ParsePinned is a log parse operation binding the contract event 0x8ddc817a12aa59f9ca11b2f6d77f8e9bfedc970fe043fde2530971d66753dbd5.
 //
-// Solidity: event Pinned(address indexed owner, uint256 amount, string hash)
+// Solidity: event Pinned(address indexed owner, uint256 amount, string hash, bool parse)
 func (_StorjPin *StorjPinFilterer) ParsePinned(log types.Log) (*StorjPinPinned, error) {
 	event := new(StorjPinPinned)
 	if err := _StorjPin.contract.UnpackLog(event, "Pinned", log); err != nil {
