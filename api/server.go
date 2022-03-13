@@ -62,6 +62,10 @@ func (server *Server) NewAPI(path string, register func(*mux.Router)) {
 	register(router)
 }
 
+func (server *Server) Register(register func(*mux.Router)) {
+	register(server.router)
+}
+
 // Run runs the server that host api endpoints.
 func (server *Server) Run(ctx context.Context) (err error) {
 	ctx, cancel := context.WithCancel(ctx)

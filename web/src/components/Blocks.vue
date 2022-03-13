@@ -1,0 +1,39 @@
+<script setup>
+import axios from "axios";
+import {defineProps, ref} from 'vue'
+
+var blocks = ref()
+var transactions = ref()
+axios.get("/api/v0/block/all").then(async function (res) {
+  blocks.value = res.data
+})
+</script>
+
+<template>
+  <div>
+    <h1>Pinned IPFS root hashes</h1>
+    <main role="main">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">Cid</th>
+          <th scope="col">Created at</th>
+          <th scope="col">Expiry</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="block in blocks">
+          <td>
+            <router-link :to="'/block/'+block.Hash">{{ block.Hash }}</router-link>
+          </td>
+          <td>{{ block.Pinned }}</td>
+          <td>{{ block.Expiry }}</td>
+        </tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+</template>
+
+<style scoped>
+</style>

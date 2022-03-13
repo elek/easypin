@@ -6,6 +6,7 @@ package pindb
 import (
 	"context"
 	"github.com/elek/easypin/pindb/dbx"
+	"math/big"
 	"time"
 
 	"github.com/zeebo/errs"
@@ -23,8 +24,16 @@ type PinDB struct {
 
 // Pin represents an entry in the pin table.
 type Pin struct {
-	Cid    string
-	Amount int64
+	Cid         string
+	Amount      *big.Int
+	Transaction string
+	LogIndex    uint
+}
+
+type Cid struct {
+	Hash   string
+	Pinned time.Time
+	Expiry time.Time
 }
 
 // Create inserts a new entry in the wallets table.
@@ -62,4 +71,32 @@ func (p *PinDB) CreateNode(ctx context.Context, cid string, expiry time.Time, am
 		return ErrPinDB.Wrap(err)
 	}
 	return ErrPinDB.Wrap(err)
+}
+
+func (p *PinDB) AllNodes(ctx context.Context) ([]Cid, error) {
+	var c []Cid
+	res, err := p.db.All_Node_OrderBy_Desc_CreatedAt(ctx)
+	if err != nil {
+		return c, ErrPinDB.Wrap(err)
+	}
+	for _, r := range res {
+		c = append(c, Cid{
+			Hash:   r.Cid,
+			Pinned: r.CreatedAt,
+			Expiry: r.ExpiredAt,
+		})
+	}
+	return c, nil
+}
+
+func (p *PinDB) Node(ctx context.Context, hash string) (Cid, error) {
+	var c Cid
+	res, err := p.db.Get_Node_By_Cid(ctx, dbx.Node_Cid(hash))
+	if err != nil {
+		return c, ErrPinDB.Wrap(err)
+	}
+	c.Hash = res.Cid
+	c.Expiry = res.ExpiredAt
+	c.Pinned = res.CreatedAt
+	return c, nil
 }

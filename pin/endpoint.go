@@ -33,8 +33,10 @@ func NewEndpoint(log *zap.Logger, service *Service) *Endpoint {
 
 // Register registers endpoint methods on API server subroute.
 func (endpoint *Endpoint) Register(router *mux.Router) {
-	router.HandleFunc("/all", endpoint.Pins).Methods(http.MethodGet)
-	router.HandleFunc("/config", endpoint.Config).Methods(http.MethodGet)
+	router.HandleFunc("/pin/all", endpoint.Pins).Methods(http.MethodGet)
+	router.HandleFunc("/pin/config", endpoint.Config).Methods(http.MethodGet)
+	router.HandleFunc("/block/all", endpoint.Blocks).Methods(http.MethodGet)
+	router.HandleFunc("/block/{cid}", endpoint.Block).Methods(http.MethodGet)
 }
 
 // Pins endpoint retrieves all Pin request events.
@@ -43,7 +45,46 @@ func (endpoint *Endpoint) Pins(w http.ResponseWriter, r *http.Request) {
 	var err error
 	defer mon.Task()(&ctx)(&err)
 
-	payments, err := endpoint.service.Pins(ctx)
+	payments, err := endpoint.service.PinsFromChain(ctx)
+	if err != nil {
+		endpoint.serveJSONError(w, http.StatusInternalServerError, ErrEndpoint.Wrap(err))
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(payments)
+	if err != nil {
+		endpoint.log.Error("failed to write json pins response", zap.Error(ErrEndpoint.Wrap(err)))
+		return
+	}
+}
+
+// Blocks endpoint retrieves all Blocks which are pinned.
+func (endpoint *Endpoint) Blocks(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var err error
+	defer mon.Task()(&ctx)(&err)
+
+	payments, err := endpoint.service.Cids(ctx)
+	if err != nil {
+		endpoint.serveJSONError(w, http.StatusInternalServerError, ErrEndpoint.Wrap(err))
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(payments)
+	if err != nil {
+		endpoint.log.Error("failed to write json pins response", zap.Error(ErrEndpoint.Wrap(err)))
+		return
+	}
+}
+
+// Block endpoint retrieves one Block which is pinned.
+func (endpoint *Endpoint) Block(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var err error
+	defer mon.Task()(&ctx)(&err)
+
+	cid := mux.Vars(r)["cid"]
+	payments, err := endpoint.service.Cid(ctx, cid)
 	if err != nil {
 		endpoint.serveJSONError(w, http.StatusInternalServerError, ErrEndpoint.Wrap(err))
 		return

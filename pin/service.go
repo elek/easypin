@@ -46,8 +46,8 @@ func NewService(log *zap.Logger, db *pindb.PinDB, endpoint string, token Address
 	}
 }
 
-// Pins returns with all on-chain pin request
-func (service *Service) Pins(ctx context.Context) (_ []Pin, err error) {
+// PinsFromChain returns with all on-chain pin request
+func (service *Service) PinsFromChain(ctx context.Context) (_ []pindb.Pin, err error) {
 	defer mon.Task()(&ctx)(&err)
 
 	client, err := ethclient.DialContext(ctx, service.endpoint)
@@ -72,13 +72,13 @@ func (service *Service) Pins(ctx context.Context) (_ []Pin, err error) {
 	}
 	defer func() { err = errs.Combine(err, ErrService.Wrap(iter.Close())) }()
 
-	var pins []Pin
+	var pins []pindb.Pin
 	for iter.Next() {
-		pins = append(pins, Pin{
+		pins = append(pins, pindb.Pin{
 			Cid:         iter.Event.Hash,
-			TokenValue:  iter.Event.Amount,
-			Transaction: iter.Event.Raw.TxHash,
-			Index:       iter.Event.Raw.Index,
+			Amount:      iter.Event.Amount,
+			Transaction: iter.Event.Raw.TxHash.Hex(),
+			LogIndex:    iter.Event.Raw.Index,
 		})
 	}
 
@@ -98,4 +98,14 @@ func (service *Service) Config(ctx context.Context) (cfg WebConfig, err error) {
 		TokenContract: service.tokenContract.Hex(),
 		PinContract:   service.pinContract.Hex(),
 	}, nil
+}
+
+func (service *Service) Cids(ctx context.Context) (result []pindb.Cid, err error) {
+	defer mon.Task()(&ctx)(&err)
+	return service.db.AllNodes(ctx)
+}
+
+func (service *Service) Cid(ctx context.Context, hash string) (result pindb.Cid, err error) {
+	defer mon.Task()(&ctx)(&err)
+	return service.db.Node(ctx, hash)
 }

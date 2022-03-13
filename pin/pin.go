@@ -4,8 +4,6 @@
 package pin
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spacemonkeygo/monkit/v3"
 	"github.com/zeebo/errs"
@@ -25,12 +23,4 @@ func AddressFromHex(hex string) (Address, error) {
 		return Address{}, errs.New("invalid address hex string")
 	}
 	return common.HexToAddress(hex), nil
-}
-
-// Pin is an on chain pinning request.
-type Pin struct {
-	Cid         string
-	TokenValue  *big.Int
-	Transaction Hash
-	Index       uint
 }

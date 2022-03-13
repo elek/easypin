@@ -114,8 +114,7 @@ func (c *Chore) PinMissing(ctx context.Context) (err error) {
 	return nil
 }
 
-//TODO int64 is enough only for 18 TOKEN!!!
-func (c *Chore) Pin(ctx context.Context, cid string, amount int64) error {
+func (c *Chore) Pin(ctx context.Context, cid string, amount *big.Int) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
@@ -124,13 +123,14 @@ func (c *Chore) Pin(ctx context.Context, cid string, amount int64) error {
 		return err
 	}
 
-	until := calculateUntil(time.Now(), c.ByteDayPrice, big.NewInt(amount), pinned.Size)
+	until := calculateUntil(time.Now(), c.ByteDayPrice, amount, pinned.Size)
 
-	err = c.db.CreateNode(ctx, cid, until, amount)
+	//TODO: fix amount
+	err = c.db.CreateNode(ctx, cid, until, amount.Int64())
 	if err != nil {
 		return err
 	}
-	c.log.Error("IPFS Cid is pinned", zap.String("cid", cid), zap.Time("until", until))
+	c.log.Error("IPFS Block is pinned", zap.String("cid", cid), zap.Time("until", until))
 	return nil
 }
 

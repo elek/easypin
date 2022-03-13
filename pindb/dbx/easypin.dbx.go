@@ -1322,6 +1322,71 @@ func (obj *pgxImpl) All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
 
 }
 
+func (obj *pgxImpl) Get_Node_By_Cid(ctx context.Context,
+	node_cid Node_Cid_Field) (
+	node *Node, err error) {
+	defer mon.Task()(&ctx)(&err)
+
+	var __embed_stmt = __sqlbundle_Literal("SELECT nodes.cid, nodes.expired_at, nodes.amount, nodes.created_at FROM nodes WHERE nodes.cid = ?")
+
+	var __values []interface{}
+	__values = append(__values, node_cid.value())
+
+	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
+	obj.logStmt(__stmt, __values...)
+
+	node = &Node{}
+	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&node.Cid, &node.ExpiredAt, &node.Amount, &node.CreatedAt)
+	if err != nil {
+		return (*Node)(nil), obj.makeErr(err)
+	}
+	return node, nil
+
+}
+
+func (obj *pgxImpl) All_Node_OrderBy_Desc_CreatedAt(ctx context.Context) (
+	rows []*Node, err error) {
+	defer mon.Task()(&ctx)(&err)
+
+	var __embed_stmt = __sqlbundle_Literal("SELECT nodes.cid, nodes.expired_at, nodes.amount, nodes.created_at FROM nodes ORDER BY nodes.created_at DESC")
+
+	var __values []interface{}
+
+	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
+	obj.logStmt(__stmt, __values...)
+
+	for {
+		rows, err = func() (rows []*Node, err error) {
+			__rows, err := obj.driver.QueryContext(ctx, __stmt, __values...)
+			if err != nil {
+				return nil, err
+			}
+			defer __rows.Close()
+
+			for __rows.Next() {
+				node := &Node{}
+				err = __rows.Scan(&node.Cid, &node.ExpiredAt, &node.Amount, &node.CreatedAt)
+				if err != nil {
+					return nil, err
+				}
+				rows = append(rows, node)
+			}
+			if err := __rows.Err(); err != nil {
+				return nil, err
+			}
+			return rows, nil
+		}()
+		if err != nil {
+			if obj.shouldRetry(err) {
+				continue
+			}
+			return nil, obj.makeErr(err)
+		}
+		return rows, nil
+	}
+
+}
+
 func (obj *pgxImpl) Update_Pin_By_Tx_And_Ix(ctx context.Context,
 	pin_tx Pin_Tx_Field,
 	pin_ix Pin_Ix_Field,
@@ -1491,6 +1556,15 @@ func (rx *Rx) Rollback() (err error) {
 	return err
 }
 
+func (rx *Rx) All_Node_OrderBy_Desc_CreatedAt(ctx context.Context) (
+	rows []*Node, err error) {
+	var tx *Tx
+	if tx, err = rx.getTx(ctx); err != nil {
+		return
+	}
+	return tx.All_Node_OrderBy_Desc_CreatedAt(ctx)
+}
+
 func (rx *Rx) All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
 	pin_cid Pin_Cid_Field) (
 	rows []*Pin, err error) {
@@ -1538,6 +1612,16 @@ func (rx *Rx) Create_Pin(ctx context.Context,
 
 }
 
+func (rx *Rx) Get_Node_By_Cid(ctx context.Context,
+	node_cid Node_Cid_Field) (
+	node *Node, err error) {
+	var tx *Tx
+	if tx, err = rx.getTx(ctx); err != nil {
+		return
+	}
+	return tx.Get_Node_By_Cid(ctx, node_cid)
+}
+
 func (rx *Rx) Get_Pin_By_Cid(ctx context.Context,
 	pin_cid Pin_Cid_Field) (
 	pin *Pin, err error) {
@@ -1572,6 +1656,9 @@ func (rx *Rx) Update_Pin_By_Tx_And_Ix(ctx context.Context,
 }
 
 type Methods interface {
+	All_Node_OrderBy_Desc_CreatedAt(ctx context.Context) (
+		rows []*Node, err error)
+
 	All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
 		pin_cid Pin_Cid_Field) (
 		rows []*Pin, err error)
@@ -1592,6 +1679,10 @@ type Methods interface {
 		pin_amount Pin_Amount_Field,
 		optional Pin_Create_Fields) (
 		pin *Pin, err error)
+
+	Get_Node_By_Cid(ctx context.Context,
+		node_cid Node_Cid_Field) (
+		node *Node, err error)
 
 	Get_Pin_By_Cid(ctx context.Context,
 		pin_cid Pin_Cid_Field) (

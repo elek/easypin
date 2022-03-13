@@ -44,3 +44,13 @@ model node (
 create node ( )
 
 update node ( where node.cid = ? )
+
+read one (
+   select node
+   where node.cid = ?
+)
+
+read all (
+   select node
+   orderby desc node.created_at
+)
