@@ -9,6 +9,7 @@ import Blocks from "./components/Blocks.vue";
 
 const routes = [
     {path: '/', component: Home},
+    {path: '/pin/:hash', component: Pin, props: true},
     {path: '/pin', component: Pin},
     {path: '/tx', component: Tx},
     {path: '/block/:hash', component: Block, props: true},

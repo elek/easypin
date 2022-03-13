@@ -3,7 +3,17 @@ import {computed, ref} from 'vue'
 import {BigNumber, ethers} from "ethers";
 import axios from "axios"
 
+const props = defineProps({
+  hash: {
+    type: String,
+    required: false
+  }
+});
+
 const cid = ref("")
+if (props.hash) {
+  cid.value = props.hash
+}
 const token = ref("loading")
 const state = ref("init")
 const account = ref("")
