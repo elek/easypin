@@ -41,7 +41,7 @@ const tokenAbi = [
 
 const pinAbi = [
   // Pin to IPFS
-  "function pin(string ipfsHash, uint amount)",
+  "function pin(string ipfsHash, uint amount, bool parse)",
 ];
 
 var price = function (d) {
@@ -98,7 +98,7 @@ var pin = function () {
   }
   var signer = provider.getSigner(account.value)
   const contract = new ethers.Contract(pinAddress, pinAbi, signer)
-  contract.pin(cid.value, price(duration)).then(function (res) {
+  contract.pin(cid.value, price(duration), true).then(function (res) {
   })
 }
 
