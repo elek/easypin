@@ -4,7 +4,7 @@
   type: ""
   chainid: 4
 - name: PIN
-  address: 0x069FaE1B18F4c18852b3F07f60f82121F8A9030b
+  address: 0xBfB4b0112E50D56183a554e8850dDDDC2a6F2a2D
   abi: ../contract/StorjPin.abi
   type: ""
   chainid: 4

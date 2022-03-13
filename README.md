@@ -7,7 +7,7 @@ Rinkeby deployment uses the ZkSync Test STORJ tokens. You can mint it [here](htt
 
 Token contract [0x8098165d982765097e4aa17138816e5b95f9fdb5](https://rinkeby.etherscan.io/address/0x8098165d982765097e4aa17138816e5b95f9fdb5)
 
-PIN contract: [0x069FaE1B18F4c18852b3F07f60f82121F8A9030b](https://rinkeby.etherscan.io/address/0x069fae1b18f4c18852b3f07f60f82121f8a9030b)
+PIN contract: [0xBfB4b0112E50D56183a554e8850dDDDC2a6F2a2D](https://rinkeby.etherscan.io/address/0xBfB4b0112E50D56183a554e8850dDDDC2a6F2a2D)
 
 Deployed with:
 
