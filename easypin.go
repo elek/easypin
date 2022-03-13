@@ -126,7 +126,7 @@ func NewApp(log *zap.Logger, config Config, db DB) (*App, error) {
 
 		app.API.Server = api.NewServer(log.Named("api:server"), app.API.Listener)
 		app.API.Server.Register(app.Pin.Endpoint.Register)
-		app.API.Server.NewAPI("/ipfs", app.IPFS.Endpoint.Register)
+		app.API.Server.Register(app.IPFS.Endpoint.Register)
 
 		app.Servers.Add(lifecycle.Item{
 			Name:  "api",

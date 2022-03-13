@@ -10,6 +10,7 @@ import (
 	"github.com/multiformats/go-multiaddr"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
+	"io"
 )
 
 type Config struct {
@@ -58,6 +59,14 @@ func (s *Service) GetPeers(ctx context.Context) ([]Peer, error) {
 		})
 	}
 	return res, nil
+}
+
+func (s *Service) Upload(ctx context.Context, reader io.Reader) (string, error) {
+	stat, err := s.api.Block().Put(ctx, reader)
+	if err != nil {
+		return "", err
+	}
+	return stat.Path().Cid().String(), nil
 }
 
 type Pinned struct {

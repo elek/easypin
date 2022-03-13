@@ -27,9 +27,8 @@ func NewEndpoint(log *zap.Logger, service *Service) *Endpoint {
 
 // Register registers endpoint methods on API server subroute.
 func (endpoint *Endpoint) Register(router *mux.Router) {
-	//TODO: make these available only for the admins
 	router.HandleFunc("/peers", endpoint.Peers).Methods(http.MethodGet)
-	router.HandleFunc("/pin/{cid}", endpoint.Pin).Methods(http.MethodPost)
+	router.HandleFunc("/add", endpoint.Upload).Methods(http.MethodPost)
 }
 
 // Peers endpoint retrieves all the active Peers
@@ -52,32 +51,6 @@ func (endpoint *Endpoint) Peers(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Pin endpoint pins one specific cid.
-func (endpoint *Endpoint) Pin(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	var err error
-	defer mon.Task()(&ctx)(&err)
-
-	cid := mux.Vars(r)["cid"]
-
-	if cid == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	pinned, err := endpoint.service.Pin(ctx, cid)
-	if err != nil {
-		endpoint.serveJSONError(w, http.StatusInternalServerError, ErrEndpoint.Wrap(err))
-		return
-	}
-
-	err = json.NewEncoder(w).Encode(pinned)
-	if err != nil {
-		endpoint.log.Error("failed to write json error response", zap.Error(ErrEndpoint.Wrap(err)))
-		return
-	}
-}
-
 // serveJSONError writes JSON error to response output stream.
 func (endpoint *Endpoint) serveJSONError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
@@ -91,6 +64,33 @@ func (endpoint *Endpoint) serveJSONError(w http.ResponseWriter, status int, err 
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		endpoint.log.Error("failed to write json error response", zap.Error(ErrEndpoint.Wrap(err)))
+		return
+	}
+}
+
+func (endpoint *Endpoint) Upload(writer http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		endpoint.log.Error("failed to write json error response", zap.Error(ErrEndpoint.Wrap(err)))
+		return
+	}
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		endpoint.log.Error("failed to write json error response", zap.Error(ErrEndpoint.Wrap(err)))
+		return
+	}
+	hash, err := endpoint.service.Upload(r.Context(), file)
+	if err != nil {
+		endpoint.log.Error("failed to write json error response", zap.Error(ErrEndpoint.Wrap(err)))
+		return
+	}
+	err = json.NewEncoder(writer).Encode(struct {
+		Hash string
+	}{
+		Hash: hash,
+	})
+	if err != nil {
+		endpoint.log.Error("failed to write json pins response", zap.Error(ErrEndpoint.Wrap(err)))
 		return
 	}
 }
