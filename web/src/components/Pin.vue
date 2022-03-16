@@ -18,6 +18,7 @@ const token = ref("loading")
 const state = ref("init")
 const account = ref("")
 var message = ref("")
+var error = ref("")
 
 var tokenAddress = ""
 var pinAddress = ""
@@ -103,13 +104,22 @@ var approve = function () {
 
 var pin = function () {
   if (cid.value === "") {
-    message.value = "Please define a hash"
+    error.value = "Please define a hash"
     return
   }
-  var signer = provider.getSigner(account.value)
-  const contract = new ethers.Contract(pinAddress, pinAbi, signer)
-  contract.pin(cid.value, price(duration), true).then(function (res) {
-  })
+  axios.get("/api/v0/block/" + cid.value).then(function (res) {
+    error.value = "The HASH is already pinned until " + res.data.Expiry
+  }).catch(function (error) {
+    var signer = provider.getSigner(account.value)
+    const contract = new ethers.Contract(pinAddress, pinAbi, signer)
+    contract.pin(cid.value, price(duration), true).then(function (res) {
+      message.value = "Transaction has been submitted. Please wait until it's finished."
+      error.value = ""
+    }).catch(error => function () {
+      error.value = "Transaction couldn't be submitted: " + error
+    });
+  });
+
 }
 
 provider.send("eth_accounts", []).then(function (res) {
@@ -135,7 +145,8 @@ var p = computed(() => {
   <form class="form-signin">
     <h1 class="h3 mb-3 font-weight-normal">Pin your IPFS hash</h1>
 
-    <p>{{ message }}</p>
+    <p class="alert alert-danger" role="alert" v-if="error">{{ error }}</p>
+    <p class="alert alert-success" role="alert" v-if="message">{{ message }}</p>
 
     <input v-model="cid" type="text" id="inputAmount" class="mb-3 form-control" placeholder="IPFS hash"
            required autofocus>

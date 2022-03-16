@@ -97,3 +97,15 @@ func (s *Service) Pin(ctx context.Context, CID string) (res Pinned, err error) {
 
 	return res, err
 }
+
+func (s *Service) IsPinned(ctx context.Context, CID string) (res bool, err error) {
+	cCID, err := cid.Parse(CID)
+	if err != nil {
+		return res, errs.Wrap(err)
+	}
+	_, res, err = s.api.Pin().IsPinned(ctx, path.New("/ipfs/"+cCID.String()))
+	if err != nil {
+		return res, errs.Wrap(err)
+	}
+	return res, err
+}

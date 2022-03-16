@@ -4,7 +4,9 @@
 package pin
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -85,6 +87,10 @@ func (endpoint *Endpoint) Block(w http.ResponseWriter, r *http.Request) {
 
 	cid := mux.Vars(r)["cid"]
 	payments, err := endpoint.service.Cid(ctx, cid)
+	if errors.Is(err, sql.ErrNoRows) {
+		endpoint.serveJSONError(w, http.StatusNotFound, ErrEndpoint.Wrap(err))
+		return
+	}
 	if err != nil {
 		endpoint.serveJSONError(w, http.StatusInternalServerError, ErrEndpoint.Wrap(err))
 		return

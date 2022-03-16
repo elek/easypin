@@ -28,6 +28,7 @@ func NewEndpoint(log *zap.Logger, service *Service) *Endpoint {
 // Register registers endpoint methods on API server subroute.
 func (endpoint *Endpoint) Register(router *mux.Router) {
 	router.HandleFunc("/peers", endpoint.Peers).Methods(http.MethodGet)
+	router.HandleFunc("/pinned/{cid}", endpoint.Pinned).Methods(http.MethodGet)
 	router.HandleFunc("/add", endpoint.Upload).Methods(http.MethodPost)
 }
 
@@ -91,6 +92,23 @@ func (endpoint *Endpoint) Upload(writer http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		endpoint.log.Error("failed to write json pins response", zap.Error(ErrEndpoint.Wrap(err)))
+		return
+	}
+}
+
+func (endpoint *Endpoint) Pinned(writer http.ResponseWriter, request *http.Request) {
+	cid := mux.Vars(request)["cid"]
+
+	res, err := endpoint.service.IsPinned(request.Context(), cid)
+	if err != nil {
+		return
+	}
+	err = json.NewEncoder(writer).Encode(struct {
+		Pinned bool
+	}{
+		Pinned: res,
+	})
+	if err != nil {
 		return
 	}
 }
