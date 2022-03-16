@@ -1,5 +1,5 @@
 import {createApp} from 'vue/dist/vue.esm-bundler.js'
-import {createRouter, createWebHistory} from 'vue-router'
+import {createRouter, createWebHashHistory} from 'vue-router'
 import Pin from "./components/Pin.vue";
 import Upload from "./components/Upload.vue";
 import Tx from "./components/Tx.vue";
@@ -19,7 +19,7 @@ const routes = [
 
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHashHistory(),
     routes,
 })
 
