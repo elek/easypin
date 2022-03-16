@@ -17,8 +17,8 @@ axios.get("/api/v0/block/all").then(async function (res) {
         <thead>
         <tr>
           <th scope="col">Cid</th>
-          <th scope="col">Created at</th>
-          <th scope="col">Expiry</th>
+          <th scope="col">Pinned at</th>
+          <th scope="col">Period (days)</th>
         </tr>
         </thead>
         <tbody>
@@ -28,6 +28,7 @@ axios.get("/api/v0/block/all").then(async function (res) {
           </td>
           <td>{{ block.Pinned }}</td>
           <td>{{ block.Expiry }}</td>
+          <td>{{ block.ValidDays }}</td>
         </tr>
         </tbody>
       </table>

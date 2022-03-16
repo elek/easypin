@@ -318,9 +318,8 @@ func newpgx(db *DB) *pgxDB {
 func (obj *pgxDB) Schema() string {
 	return `CREATE TABLE nodes (
 	cid text NOT NULL,
-	expired_at timestamp with time zone NOT NULL,
-	amount text NOT NULL,
-	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
+	days integer NOT NULL,
+	pinned_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
 	PRIMARY KEY ( cid )
 );
 CREATE TABLE pins (
@@ -399,16 +398,15 @@ nextval:
 }
 
 type Node struct {
-	Cid       string
-	ExpiredAt time.Time
-	Amount    string
-	CreatedAt time.Time
+	Cid      string
+	Days     int
+	PinnedAt time.Time
 }
 
 func (Node) _Table() string { return "nodes" }
 
 type Node_Update_Fields struct {
-	ExpiredAt Node_ExpiredAt_Field
+	Days Node_Days_Field
 }
 
 type Node_Cid_Field struct {
@@ -430,62 +428,43 @@ func (f Node_Cid_Field) value() interface{} {
 
 func (Node_Cid_Field) _Column() string { return "cid" }
 
-type Node_ExpiredAt_Field struct {
+type Node_Days_Field struct {
+	_set   bool
+	_null  bool
+	_value int
+}
+
+func Node_Days(v int) Node_Days_Field {
+	return Node_Days_Field{_set: true, _value: v}
+}
+
+func (f Node_Days_Field) value() interface{} {
+	if !f._set || f._null {
+		return nil
+	}
+	return f._value
+}
+
+func (Node_Days_Field) _Column() string { return "days" }
+
+type Node_PinnedAt_Field struct {
 	_set   bool
 	_null  bool
 	_value time.Time
 }
 
-func Node_ExpiredAt(v time.Time) Node_ExpiredAt_Field {
-	return Node_ExpiredAt_Field{_set: true, _value: v}
+func Node_PinnedAt(v time.Time) Node_PinnedAt_Field {
+	return Node_PinnedAt_Field{_set: true, _value: v}
 }
 
-func (f Node_ExpiredAt_Field) value() interface{} {
+func (f Node_PinnedAt_Field) value() interface{} {
 	if !f._set || f._null {
 		return nil
 	}
 	return f._value
 }
 
-func (Node_ExpiredAt_Field) _Column() string { return "expired_at" }
-
-type Node_Amount_Field struct {
-	_set   bool
-	_null  bool
-	_value string
-}
-
-func Node_Amount(v string) Node_Amount_Field {
-	return Node_Amount_Field{_set: true, _value: v}
-}
-
-func (f Node_Amount_Field) value() interface{} {
-	if !f._set || f._null {
-		return nil
-	}
-	return f._value
-}
-
-func (Node_Amount_Field) _Column() string { return "amount" }
-
-type Node_CreatedAt_Field struct {
-	_set   bool
-	_null  bool
-	_value time.Time
-}
-
-func Node_CreatedAt(v time.Time) Node_CreatedAt_Field {
-	return Node_CreatedAt_Field{_set: true, _value: v}
-}
-
-func (f Node_CreatedAt_Field) value() interface{} {
-	if !f._set || f._null {
-		return nil
-	}
-	return f._value
-}
-
-func (Node_CreatedAt_Field) _Column() string { return "created_at" }
+func (Node_PinnedAt_Field) _Column() string { return "pinned_at" }
 
 type Pin struct {
 	Tx        string
@@ -1105,13 +1084,6 @@ func (h *__sqlbundle_Hole) Render() string {
 // end runtime support for building sql statements
 //
 
-type Tx_Ix_Cid_Amount_Row struct {
-	Tx     string
-	Ix     int
-	Cid    string
-	Amount string
-}
-
 func (obj *pgxImpl) Create_Pin(ctx context.Context,
 	pin_tx Pin_Tx_Field,
 	pin_ix Pin_Ix_Field,
@@ -1183,28 +1155,26 @@ func (obj *pgxImpl) Create_Pin(ctx context.Context,
 
 func (obj *pgxImpl) Create_Node(ctx context.Context,
 	node_cid Node_Cid_Field,
-	node_expired_at Node_ExpiredAt_Field,
-	node_amount Node_Amount_Field) (
+	node_days Node_Days_Field) (
 	node *Node, err error) {
 	defer mon.Task()(&ctx)(&err)
 	__cid_val := node_cid.value()
-	__expired_at_val := node_expired_at.value()
-	__amount_val := node_amount.value()
+	__days_val := node_days.value()
 
-	var __columns = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("cid, expired_at, amount")}
-	var __placeholders = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("?, ?, ?")}
+	var __columns = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("cid, days")}
+	var __placeholders = &__sqlbundle_Hole{SQL: __sqlbundle_Literal("?, ?")}
 	var __clause = &__sqlbundle_Hole{SQL: __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("("), __columns, __sqlbundle_Literal(") VALUES ("), __placeholders, __sqlbundle_Literal(")")}}}
 
-	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("INSERT INTO nodes "), __clause, __sqlbundle_Literal(" RETURNING nodes.cid, nodes.expired_at, nodes.amount, nodes.created_at")}}
+	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("INSERT INTO nodes "), __clause, __sqlbundle_Literal(" RETURNING nodes.cid, nodes.days, nodes.pinned_at")}}
 
 	var __values []interface{}
-	__values = append(__values, __cid_val, __expired_at_val, __amount_val)
+	__values = append(__values, __cid_val, __days_val)
 
 	var __stmt = __sqlbundle_Render(obj.dialect, __embed_stmt)
 	obj.logStmt(__stmt, __values...)
 
 	node = &Node{}
-	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&node.Cid, &node.ExpiredAt, &node.Amount, &node.CreatedAt)
+	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&node.Cid, &node.Days, &node.PinnedAt)
 	if err != nil {
 		return nil, obj.makeErr(err)
 	}
@@ -1358,11 +1328,11 @@ func (obj *pgxImpl) All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
 
 }
 
-func (obj *pgxImpl) All_Pin_Tx_Pin_Ix_Pin_Cid_Pin_Amount_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx context.Context) (
-	rows []*Tx_Ix_Cid_Amount_Row, err error) {
+func (obj *pgxImpl) All_Pin_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx context.Context) (
+	rows []*Pin, err error) {
 	defer mon.Task()(&ctx)(&err)
 
-	var __embed_stmt = __sqlbundle_Literal("SELECT pins.tx, pins.ix, pins.cid, pins.amount FROM pins WHERE pins.processed = false ORDER BY pins.created_at")
+	var __embed_stmt = __sqlbundle_Literal("SELECT pins.tx, pins.ix, pins.cid, pins.retry, pins.error, pins.parse, pins.amount, pins.processed, pins.created_at FROM pins WHERE pins.processed = false ORDER BY pins.created_at")
 
 	var __values []interface{}
 
@@ -1370,7 +1340,7 @@ func (obj *pgxImpl) All_Pin_Tx_Pin_Ix_Pin_Cid_Pin_Amount_By_Processed_Equal_Fals
 	obj.logStmt(__stmt, __values...)
 
 	for {
-		rows, err = func() (rows []*Tx_Ix_Cid_Amount_Row, err error) {
+		rows, err = func() (rows []*Pin, err error) {
 			__rows, err := obj.driver.QueryContext(ctx, __stmt, __values...)
 			if err != nil {
 				return nil, err
@@ -1378,12 +1348,12 @@ func (obj *pgxImpl) All_Pin_Tx_Pin_Ix_Pin_Cid_Pin_Amount_By_Processed_Equal_Fals
 			defer __rows.Close()
 
 			for __rows.Next() {
-				row := &Tx_Ix_Cid_Amount_Row{}
-				err = __rows.Scan(&row.Tx, &row.Ix, &row.Cid, &row.Amount)
+				pin := &Pin{}
+				err = __rows.Scan(&pin.Tx, &pin.Ix, &pin.Cid, &pin.Retry, &pin.Error, &pin.Parse, &pin.Amount, &pin.Processed, &pin.CreatedAt)
 				if err != nil {
 					return nil, err
 				}
-				rows = append(rows, row)
+				rows = append(rows, pin)
 			}
 			if err := __rows.Err(); err != nil {
 				return nil, err
@@ -1406,7 +1376,7 @@ func (obj *pgxImpl) Get_Node_By_Cid(ctx context.Context,
 	node *Node, err error) {
 	defer mon.Task()(&ctx)(&err)
 
-	var __embed_stmt = __sqlbundle_Literal("SELECT nodes.cid, nodes.expired_at, nodes.amount, nodes.created_at FROM nodes WHERE nodes.cid = ?")
+	var __embed_stmt = __sqlbundle_Literal("SELECT nodes.cid, nodes.days, nodes.pinned_at FROM nodes WHERE nodes.cid = ?")
 
 	var __values []interface{}
 	__values = append(__values, node_cid.value())
@@ -1415,7 +1385,7 @@ func (obj *pgxImpl) Get_Node_By_Cid(ctx context.Context,
 	obj.logStmt(__stmt, __values...)
 
 	node = &Node{}
-	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&node.Cid, &node.ExpiredAt, &node.Amount, &node.CreatedAt)
+	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&node.Cid, &node.Days, &node.PinnedAt)
 	if err != nil {
 		return (*Node)(nil), obj.makeErr(err)
 	}
@@ -1423,11 +1393,11 @@ func (obj *pgxImpl) Get_Node_By_Cid(ctx context.Context,
 
 }
 
-func (obj *pgxImpl) All_Node_OrderBy_Desc_CreatedAt(ctx context.Context) (
+func (obj *pgxImpl) All_Node_OrderBy_Desc_PinnedAt(ctx context.Context) (
 	rows []*Node, err error) {
 	defer mon.Task()(&ctx)(&err)
 
-	var __embed_stmt = __sqlbundle_Literal("SELECT nodes.cid, nodes.expired_at, nodes.amount, nodes.created_at FROM nodes ORDER BY nodes.created_at DESC")
+	var __embed_stmt = __sqlbundle_Literal("SELECT nodes.cid, nodes.days, nodes.pinned_at FROM nodes ORDER BY nodes.pinned_at DESC")
 
 	var __values []interface{}
 
@@ -1444,7 +1414,7 @@ func (obj *pgxImpl) All_Node_OrderBy_Desc_CreatedAt(ctx context.Context) (
 
 			for __rows.Next() {
 				node := &Node{}
-				err = __rows.Scan(&node.Cid, &node.ExpiredAt, &node.Amount, &node.CreatedAt)
+				err = __rows.Scan(&node.Cid, &node.Days, &node.PinnedAt)
 				if err != nil {
 					return nil, err
 				}
@@ -1525,15 +1495,15 @@ func (obj *pgxImpl) Update_Node_By_Cid(ctx context.Context,
 	defer mon.Task()(&ctx)(&err)
 	var __sets = &__sqlbundle_Hole{}
 
-	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("UPDATE nodes SET "), __sets, __sqlbundle_Literal(" WHERE nodes.cid = ? RETURNING nodes.cid, nodes.expired_at, nodes.amount, nodes.created_at")}}
+	var __embed_stmt = __sqlbundle_Literals{Join: "", SQLs: []__sqlbundle_SQL{__sqlbundle_Literal("UPDATE nodes SET "), __sets, __sqlbundle_Literal(" WHERE nodes.cid = ? RETURNING nodes.cid, nodes.days, nodes.pinned_at")}}
 
 	__sets_sql := __sqlbundle_Literals{Join: ", "}
 	var __values []interface{}
 	var __args []interface{}
 
-	if update.ExpiredAt._set {
-		__values = append(__values, update.ExpiredAt.value())
-		__sets_sql.SQLs = append(__sets_sql.SQLs, __sqlbundle_Literal("expired_at = ?"))
+	if update.Days._set {
+		__values = append(__values, update.Days.value())
+		__sets_sql.SQLs = append(__sets_sql.SQLs, __sqlbundle_Literal("days = ?"))
 	}
 
 	if len(__sets_sql.SQLs) == 0 {
@@ -1549,7 +1519,7 @@ func (obj *pgxImpl) Update_Node_By_Cid(ctx context.Context,
 	obj.logStmt(__stmt, __values...)
 
 	node = &Node{}
-	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&node.Cid, &node.ExpiredAt, &node.Amount, &node.CreatedAt)
+	err = obj.queryRowContext(ctx, __stmt, __values...).Scan(&node.Cid, &node.Days, &node.PinnedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -1640,13 +1610,13 @@ func (rx *Rx) Rollback() (err error) {
 	return err
 }
 
-func (rx *Rx) All_Node_OrderBy_Desc_CreatedAt(ctx context.Context) (
+func (rx *Rx) All_Node_OrderBy_Desc_PinnedAt(ctx context.Context) (
 	rows []*Node, err error) {
 	var tx *Tx
 	if tx, err = rx.getTx(ctx); err != nil {
 		return
 	}
-	return tx.All_Node_OrderBy_Desc_CreatedAt(ctx)
+	return tx.All_Node_OrderBy_Desc_PinnedAt(ctx)
 }
 
 func (rx *Rx) All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
@@ -1659,6 +1629,15 @@ func (rx *Rx) All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
 	return tx.All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx, pin_cid)
 }
 
+func (rx *Rx) All_Pin_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx context.Context) (
+	rows []*Pin, err error) {
+	var tx *Tx
+	if tx, err = rx.getTx(ctx); err != nil {
+		return
+	}
+	return tx.All_Pin_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx)
+}
+
 func (rx *Rx) All_Pin_OrderBy_Desc_CreatedAt(ctx context.Context) (
 	rows []*Pin, err error) {
 	var tx *Tx
@@ -1668,25 +1647,15 @@ func (rx *Rx) All_Pin_OrderBy_Desc_CreatedAt(ctx context.Context) (
 	return tx.All_Pin_OrderBy_Desc_CreatedAt(ctx)
 }
 
-func (rx *Rx) All_Pin_Tx_Pin_Ix_Pin_Cid_Pin_Amount_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx context.Context) (
-	rows []*Tx_Ix_Cid_Amount_Row, err error) {
-	var tx *Tx
-	if tx, err = rx.getTx(ctx); err != nil {
-		return
-	}
-	return tx.All_Pin_Tx_Pin_Ix_Pin_Cid_Pin_Amount_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx)
-}
-
 func (rx *Rx) Create_Node(ctx context.Context,
 	node_cid Node_Cid_Field,
-	node_expired_at Node_ExpiredAt_Field,
-	node_amount Node_Amount_Field) (
+	node_days Node_Days_Field) (
 	node *Node, err error) {
 	var tx *Tx
 	if tx, err = rx.getTx(ctx); err != nil {
 		return
 	}
-	return tx.Create_Node(ctx, node_cid, node_expired_at, node_amount)
+	return tx.Create_Node(ctx, node_cid, node_days)
 
 }
 
@@ -1749,23 +1718,22 @@ func (rx *Rx) Update_Pin_By_Tx_And_Ix(ctx context.Context,
 }
 
 type Methods interface {
-	All_Node_OrderBy_Desc_CreatedAt(ctx context.Context) (
+	All_Node_OrderBy_Desc_PinnedAt(ctx context.Context) (
 		rows []*Node, err error)
 
 	All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
 		pin_cid Pin_Cid_Field) (
 		rows []*Pin, err error)
 
+	All_Pin_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx context.Context) (
+		rows []*Pin, err error)
+
 	All_Pin_OrderBy_Desc_CreatedAt(ctx context.Context) (
 		rows []*Pin, err error)
 
-	All_Pin_Tx_Pin_Ix_Pin_Cid_Pin_Amount_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx context.Context) (
-		rows []*Tx_Ix_Cid_Amount_Row, err error)
-
 	Create_Node(ctx context.Context,
 		node_cid Node_Cid_Field,
-		node_expired_at Node_ExpiredAt_Field,
-		node_amount Node_Amount_Field) (
+		node_days Node_Days_Field) (
 		node *Node, err error)
 
 	Create_Pin(ctx context.Context,

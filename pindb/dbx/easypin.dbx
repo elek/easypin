@@ -32,7 +32,7 @@ read all (
 )
 
 read all (
-   select pin.tx pin.ix pin.cid pin.amount
+   select pin
    where pin.processed = false
    orderby asc pin.created_at
 )
@@ -43,9 +43,8 @@ update pin ( where pin.tx = ?, where pin.ix = ? )
 model node (
     key cid
     field cid text
-    field expired_at timestamp (updatable)
-    field amount text
-    field created_at timestamp ( autoinsert, default current_timestamp )
+    field days int (updatable)
+    field pinned_at timestamp ( autoinsert, default current_timestamp )
 )
 
 create node ( )
@@ -59,5 +58,5 @@ read one (
 
 read all (
    select node
-   orderby desc node.created_at
+   orderby desc node.pinned_at
 )

@@ -23,10 +23,11 @@ type Chore struct {
 	contract     string
 	Loop         *sync2.Cycle
 	IPFS         *ipfs.Service
-	ByteDayPrice *big.Int //price in raw token(1e-18) / unit(=1byte) / month
+	ByteDayPrice *big.Int
 }
 
 func NewChore(log *zap.Logger, db *pindb.PinDB, service *ipfs.Service, endpoint string, contract string) *Chore {
+	price, _ := new(big.Int).SetString("2731", 10) // 0.01 / year with decimal 8
 	return &Chore{
 		log:          log,
 		db:           db,
@@ -34,7 +35,7 @@ func NewChore(log *zap.Logger, db *pindb.PinDB, service *ipfs.Service, endpoint 
 		contract:     contract,
 		Loop:         sync2.NewCycle(1 * time.Minute),
 		IPFS:         service,
-		ByteDayPrice: big.NewInt(133333), // 4 USD / 1 TB (1E12) * token unit (1E18) / 1 USD/STORJ / 30 days
+		ByteDayPrice: price,
 	}
 }
 
@@ -123,19 +124,22 @@ func (c *Chore) Pin(ctx context.Context, txHash string, ix uint, cid string, amo
 		return err
 	}
 
-	until := calculateUntil(time.Now(), c.ByteDayPrice, amount, pinned.Size)
+	days := calculateDays(c.ByteDayPrice, amount, pinned.Size)
 
 	//TODO: fix amount
-	err = c.db.CreateNode(ctx, txHash, int(ix), cid, until, amount)
+	err = c.db.CreateNode(ctx, txHash, int(ix), cid, days)
 	if err != nil {
 		return err
 	}
-	c.log.Error("IPFS Block is pinned", zap.String("cid", cid), zap.Time("until", until))
+	c.log.Error("IPFS Block is pinned", zap.String("cid", cid), zap.Uint("days", days))
 	return nil
 }
 
-func calculateUntil(from time.Time, basePrice *big.Int, paidToken *big.Int, size uint64) time.Time {
-	pricePerDay := new(big.Int).Mul(basePrice, big.NewInt(int64(size)))
-	paidSeconds := new(big.Int).Div(new(big.Int).Mul(paidToken, big.NewInt(24*60*60)), pricePerDay)
-	return from.Add(time.Duration(paidSeconds.Int64()) * time.Second)
+func calculateDays(basePrice *big.Int, paidToken *big.Int, size uint64) uint {
+	//TODO: size based calculation
+	//pricePerDay := new(big.Int).Mul(basePrice, big.NewInt(int64(size)))
+	//paidSeconds := new(big.Int).Div(new(big.Int).Mul(paidToken, big.NewInt(24*60*60)), pricePerDay)
+	//return from.Add(time.Duration(paidSeconds.Int64()) * time.Second)
+
+	return uint(new(big.Int).Div(paidToken, basePrice).Int64() + 1)
 }

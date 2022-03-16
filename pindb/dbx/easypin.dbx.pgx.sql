@@ -2,9 +2,8 @@
 -- DO NOT EDIT
 CREATE TABLE nodes (
 	cid text NOT NULL,
-	expired_at timestamp with time zone NOT NULL,
-	amount text NOT NULL,
-	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
+	days integer NOT NULL,
+	pinned_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
 	PRIMARY KEY ( cid )
 );
 CREATE TABLE pins (

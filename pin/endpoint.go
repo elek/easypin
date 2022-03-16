@@ -37,6 +37,7 @@ func NewEndpoint(log *zap.Logger, service *Service) *Endpoint {
 func (endpoint *Endpoint) Register(router *mux.Router) {
 	router.HandleFunc("/pin/all", endpoint.Pins).Methods(http.MethodGet)
 	router.HandleFunc("/pin/config", endpoint.Config).Methods(http.MethodGet)
+	router.HandleFunc("/pin/{cid}", endpoint.PinOfHash).Methods(http.MethodGet)
 	router.HandleFunc("/block/all", endpoint.Blocks).Methods(http.MethodGet)
 	router.HandleFunc("/block/{cid}", endpoint.Block).Methods(http.MethodGet)
 }
@@ -47,7 +48,7 @@ func (endpoint *Endpoint) Pins(w http.ResponseWriter, r *http.Request) {
 	var err error
 	defer mon.Task()(&ctx)(&err)
 
-	payments, err := endpoint.service.PinsFromChain(ctx)
+	payments, err := endpoint.service.AllPins(ctx)
 	if err != nil {
 		endpoint.serveJSONError(w, http.StatusInternalServerError, ErrEndpoint.Wrap(err))
 		return
@@ -135,6 +136,29 @@ func (endpoint *Endpoint) serveJSONError(w http.ResponseWriter, status int, err 
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		endpoint.log.Error("failed to write json error response", zap.Error(ErrEndpoint.Wrap(err)))
+		return
+	}
+}
+
+func (endpoint *Endpoint) PinOfHash(w http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+	var err error
+	defer mon.Task()(&ctx)(&err)
+
+	cid := mux.Vars(request)["cid"]
+	payments, err := endpoint.service.PinsOfHash(ctx, cid)
+	if errors.Is(err, sql.ErrNoRows) {
+		endpoint.serveJSONError(w, http.StatusNotFound, ErrEndpoint.Wrap(err))
+		return
+	}
+	if err != nil {
+		endpoint.serveJSONError(w, http.StatusInternalServerError, ErrEndpoint.Wrap(err))
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(payments)
+	if err != nil {
+		endpoint.log.Error("failed to write json pins response", zap.Error(ErrEndpoint.Wrap(err)))
 		return
 	}
 }

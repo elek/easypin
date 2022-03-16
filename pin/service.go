@@ -109,3 +109,15 @@ func (service *Service) Cid(ctx context.Context, hash string) (result pindb.Cid,
 	defer mon.Task()(&ctx)(&err)
 	return service.db.Node(ctx, hash)
 }
+
+func (service *Service) AllPins(ctx context.Context) (result []pindb.Pin, err error) {
+	defer mon.Task()(&ctx)(&err)
+	return service.db.AllPins(ctx)
+
+}
+
+func (service *Service) PinsOfHash(ctx context.Context, cid string) (result []pindb.Pin, err error) {
+	defer mon.Task()(&ctx)(&err)
+	return service.db.PinsOfHash(ctx, cid)
+
+}
