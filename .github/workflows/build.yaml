@@ -5,6 +5,12 @@ jobs:
   build-info:
     runs-on: ubuntu-18.04
     steps:
+      - name: login
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: chekout
         uses: actions/checkout@v2
       - name: build
