@@ -3,7 +3,7 @@
 CREATE TABLE nodes (
 	cid text NOT NULL,
 	expired_at timestamp with time zone NOT NULL,
-	amount bigint NOT NULL,
+	amount text NOT NULL,
 	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
 	PRIMARY KEY ( cid )
 );
@@ -14,7 +14,8 @@ CREATE TABLE pins (
 	retry integer NOT NULL DEFAULT 0,
 	error text NOT NULL DEFAULT '',
 	parse boolean NOT NULL DEFAULT false,
-	amount bigint NOT NULL,
+	amount text NOT NULL,
+	processed boolean NOT NULL DEFAULT false,
 	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
 	PRIMARY KEY ( tx, ix )
 );

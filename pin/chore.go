@@ -88,7 +88,7 @@ func (c *Chore) PersistRequests(ctx context.Context) (err error) {
 		err = c.db.Create(ctx, iter.Event.Raw.TxHash.Hex(),
 			iter.Event.Raw.Index,
 			iter.Event.Hash,
-			iter.Event.Amount.Int64())
+			iter.Event.Amount)
 		if err != nil {
 			return err
 		}
@@ -106,7 +106,7 @@ func (c *Chore) PinMissing(ctx context.Context) (err error) {
 	for _, p := range pins {
 		c.log.Info("Pinning new IPFS entry", zap.String("cid", p.Cid))
 
-		err := c.Pin(ctx, p.Cid, p.Amount)
+		err := c.Pin(ctx, p.Transaction, p.LogIndex, p.Cid, p.Amount)
 		if err != nil {
 			c.log.Error("Pinning is failed", zap.String("cid", p.Cid), zap.Error(err))
 		}
@@ -114,7 +114,7 @@ func (c *Chore) PinMissing(ctx context.Context) (err error) {
 	return nil
 }
 
-func (c *Chore) Pin(ctx context.Context, cid string, amount *big.Int) error {
+func (c *Chore) Pin(ctx context.Context, txHash string, ix uint, cid string, amount *big.Int) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
@@ -126,7 +126,7 @@ func (c *Chore) Pin(ctx context.Context, cid string, amount *big.Int) error {
 	until := calculateUntil(time.Now(), c.ByteDayPrice, amount, pinned.Size)
 
 	//TODO: fix amount
-	err = c.db.CreateNode(ctx, cid, until, amount.Int64())
+	err = c.db.CreateNode(ctx, txHash, int(ix), cid, until, amount)
 	if err != nil {
 		return err
 	}

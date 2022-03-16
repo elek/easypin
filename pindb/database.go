@@ -97,10 +97,11 @@ func (db *DB) PostgresMigration() *migrate.Migration {
 				Description: "Initial setup",
 				Version:     0,
 				Action: migrate.SQL{
-					`CREATE TABLE nodes (
+					`
+CREATE TABLE nodes (
 	cid text NOT NULL,
 	expired_at timestamp with time zone NOT NULL,
-	amount bigint NOT NULL,
+	amount text NOT NULL,
 	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
 	PRIMARY KEY ( cid )
 );
@@ -108,21 +109,14 @@ CREATE TABLE pins (
 	tx text NOT NULL,
 	ix integer NOT NULL,
 	cid text NOT NULL,
-	amount bigint NOT NULL,
+	retry integer NOT NULL DEFAULT 0,
+	error text NOT NULL DEFAULT '',
+	parse boolean NOT NULL DEFAULT false,
+	amount text NOT NULL,
+	processed boolean NOT NULL DEFAULT false,
 	created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
 	PRIMARY KEY ( tx, ix )
 );
-`,
-				},
-			},
-			{
-				DB:          &db.migrationDB,
-				Description: "Initial setup",
-				Version:     1,
-				Action: migrate.SQL{
-					`ALTER TABLE pins ADD COLUMN retry integer NOT NULL DEFAULT 0;
-					ALTER TABLE pins ADD COLUMN error text NOT NULL DEFAULT '';
-					ALTER TABLE pins ADD COLUMN parse boolean NOT NULL DEFAULT false;
 `,
 				},
 			},

@@ -37,8 +37,8 @@ type Cid struct {
 }
 
 // Create inserts a new entry in the wallets table.
-func (p *PinDB) Create(ctx context.Context, tx string, ix uint, cid string, amount int64) error {
-	_, err := p.db.ExecContext(ctx, p.db.Rebind("INSERT INTO pins ( tx, ix, cid, amount ) VALUES ( ?, ?, ?, ?) ON CONFLICT DO NOTHING;"), tx, ix, cid, amount)
+func (p *PinDB) Create(ctx context.Context, tx string, ix uint, cid string, amount *big.Int) error {
+	_, err := p.db.ExecContext(ctx, p.db.Rebind("INSERT INTO pins ( tx, ix, cid, amount ) VALUES ( ?, ?, ?, ?) ON CONFLICT DO NOTHING;"), tx, ix, cid, amount.String())
 	if err != nil {
 		return ErrPinDB.Wrap(err)
 	}
@@ -48,16 +48,22 @@ func (p *PinDB) Create(ctx context.Context, tx string, ix uint, cid string, amou
 func (p *PinDB) FindNew(ctx context.Context) ([]Pin, error) {
 	var res []Pin
 
-	rows, err := p.db.Query(ctx, "select paid.cid,paid.amount from (select pins.cid,sum(pins.amount) as amount from pins group by cid) paid left join nodes on nodes.cid=paid.cid WHERE nodes.cid is null;")
+	rows, err := p.db.All_Pin_Tx_Pin_Ix_Pin_Cid_Pin_Amount_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx)
 	if err != nil {
 		return res, ErrPinDB.Wrap(err)
 	}
 
-	for rows.Next() {
+	var ok bool
+	for _, row := range rows {
 		p := Pin{}
-		err := rows.Scan(&p.Cid, &p.Amount)
-		if err != nil {
-			return res, err
+		p.Cid = row.Cid
+		p.LogIndex = uint(row.Ix)
+		p.Transaction = row.Tx
+		if row.Amount != "" {
+			p.Amount, ok = new(big.Int).SetString(row.Amount, 10)
+			if !ok {
+				return res, errs.New("Couldn't parse amount %s", row.Amount)
+			}
 		}
 		res = append(res, p)
 	}
@@ -65,11 +71,27 @@ func (p *PinDB) FindNew(ctx context.Context) ([]Pin, error) {
 }
 
 // CreateNode inserts node record to the table (represents a pinned resource).
-func (p *PinDB) CreateNode(ctx context.Context, cid string, expiry time.Time, amount int64) error {
-	_, err := p.db.Create_Node(ctx, dbx.Node_Cid(cid), dbx.Node_ExpiredAt(expiry), dbx.Node_Amount(amount))
+func (p *PinDB) CreateNode(ctx context.Context, txHash string, ix int, cid string, expiry time.Time, amount *big.Int) (err error) {
+	tx, err := p.db.Open(ctx)
 	if err != nil {
 		return ErrPinDB.Wrap(err)
 	}
+	defer func() {
+		err = errs.Combine(err, tx.Commit())
+	}()
+
+	_, err = tx.Create_Node(ctx, dbx.Node_Cid(cid), dbx.Node_ExpiredAt(expiry), dbx.Node_Amount(amount.String()))
+	if err != nil {
+		return ErrPinDB.Wrap(err)
+	}
+
+	_, err = tx.Update_Pin_By_Tx_And_Ix(ctx, dbx.Pin_Tx(txHash), dbx.Pin_Ix(ix), dbx.Pin_Update_Fields{
+		Processed: dbx.Pin_Processed(true),
+	})
+	if err != nil {
+		return ErrPinDB.Wrap(err)
+	}
+
 	return ErrPinDB.Wrap(err)
 }
 
