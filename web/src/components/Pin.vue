@@ -108,7 +108,7 @@ var pin = function () {
     return
   }
   axios.get("/api/v0/block/" + cid.value).then(function (res) {
-    error.value = "The HASH is already pinned until " + res.data.Expiry
+    message.value = "The <a href=\"/ipfs/" + cid.value + "\">requested hash </a> is already pinned until " + res.data.Expiry + "."
   }).catch(function (e) {
     var signer = provider.getSigner(account.value)
     const contract = new ethers.Contract(pinAddress, pinAbi, signer)
