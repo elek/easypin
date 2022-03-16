@@ -6,4 +6,6 @@ interface IStorjPin {
 
     function pin(string memory ipfsHash, uint256 tokenAmount, bool parse) external;
 
+    function pinByTxOrigin(string memory ipfsHash, uint256 tokenAmount, bool parse) external;
+
 }

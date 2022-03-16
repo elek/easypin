@@ -4,7 +4,12 @@
   type: ""
   chainid: 4
 - name: PIN
-  address: 0xBfB4b0112E50D56183a554e8850dDDDC2a6F2a2D
+  address: 0xe7b556AB490C931dcc3319B56fC83B0628AE21bb
   abi: ../contract/StorjPin.abi
+  type: ""
+  chainid: 4
+- name: NFT
+  address: 0xE2908427fBE622Cf2B5c0Ea4E9Bb43C8f04e82CF
+  abi: ../test/NFT.abi
   type: ""
   chainid: 4

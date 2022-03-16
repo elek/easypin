@@ -30,7 +30,7 @@ contract NFT is ERC721URIStorage, AccessControl {
         _tokenIds.increment();
 
         //please note that we pin here only the descriptor, not the referenced image
-        pin.pin(hash, 20000000, true);
+        pin.pinByTxOrigin(hash, 20000000, true);
         uint256 newItemId = _tokenIds.current();
         _safeMint(owner, newItemId);
         _setTokenURI(newItemId, hash);

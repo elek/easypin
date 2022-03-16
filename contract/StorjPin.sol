@@ -23,6 +23,12 @@ contract StorjPin is IStorjPin, Ownable {
         emit Pinned(msg.sender, tokenAmount, ipfsHash, parse);
     }
 
+    //same as the pin but it's paid by the tx.origin (recommended for smart contracts)
+    function pinByTxOrigin(string memory ipfsHash, uint256 tokenAmount, bool parse) public {
+        require(token.transferFrom(tx.origin, address(this), tokenAmount));
+        emit Pinned(msg.sender, tokenAmount, ipfsHash, parse);
+    }
+
     function withdraw(address target) public onlyOwner {
         uint256 balance = token.balanceOf(address(this));
         token.transfer(target, balance);
