@@ -20,6 +20,8 @@ const account = ref("")
 var message = ref("")
 var error = ref("")
 
+var existing = ref(false)
+
 var tokenAddress = ""
 var pinAddress = ""
 var duration = ref(1)
@@ -107,19 +109,33 @@ var pin = function () {
     error.value = "Please define a hash"
     return
   }
-  axios.get("/api/v0/block/" + cid.value).then(function (res) {
-    message.value = "The <a href=\"/ipfs/" + cid.value + "\">requested hash </a> is already pinned for " + res.data.ValidDays + " days."
-  }).catch(function (e) {
-    var signer = provider.getSigner(account.value)
-    const contract = new ethers.Contract(pinAddress, pinAbi, signer)
-    contract.pin(cid.value, price(duration), true).then(function (res) {
-      message.value = "Transaction has been submitted. Please wait until it's finished, or follow it on <a href=\"https://rinkeby.etherscan.io/tx/" + res.hash + "\">etherscan</a>."
-      error.value = ""
-    }).catch(error => function () {
-      error.value = "Transaction couldn't be submitted: " + error
-    });
-  });
 
+  var signer = provider.getSigner(account.value)
+  const contract = new ethers.Contract(pinAddress, pinAbi, signer)
+  contract.pin(cid.value, price(duration), true).then(function (res) {
+    message.value = "Transaction has been submitted. Please wait until it's finished, or follow it on <a href=\"https://rinkeby.etherscan.io/tx/" + res.hash + "\">etherscan</a>."
+    error.value = ""
+  }).catch(error => function () {
+    error.value = "Transaction couldn't be submitted: " + error
+
+
+  });
+}
+
+var checkExisting = function () {
+  if (cid.value.length > 10) {
+    axios.get("/api/v0/block/" + cid.value).then(function (res) {
+      message.value = "The <a href=\"/ipfs/" + cid.value + "\">requested hash </a> is already pinned for " + res.data.ValidDays + " days."
+      existing.value = true
+    }).catch(function (e) {
+      message.value = ""
+      existing.value = false
+    });
+  }
+  if (!cid.value) {
+    existing.value = false
+    message.value = ""
+  }
 }
 
 provider.send("eth_accounts", []).then(function (res) {
@@ -148,7 +164,8 @@ var p = computed(() => {
     <p class="alert alert-danger" role="alert" v-if="error">{{ error }}</p>
     <p class="alert alert-success" role="alert" v-if="message" v-html="message"></p>
 
-    <input v-model="cid" type="text" id="inputAmount" class="mb-3 form-control" placeholder="IPFS hash"
+    <input v-model="cid" v-on:input="checkExisting" type="text" id="inputAmount" class="mb-3 form-control"
+           placeholder="IPFS hash"
            required autofocus>
 
     <div class="form-check form-check-inline">
@@ -168,11 +185,15 @@ var p = computed(() => {
             class="btn btn-lg btn-warning btn-block"
             @click="connect()">Connect to metamask
     </button>
-
     <div v-if="account">
-      <button v-if="allowed()" type="button"
+      <button v-if="allowed() && !existing" type="button"
               class="btn btn-lg btn-warning btn-block"
               @click="pin()">Pin It!
+      </button>
+
+      <button v-if="allowed() && existing" type="button"
+              class="btn btn-lg btn-warning btn-block"
+              @click="pin()">Extend the pinning period!
       </button>
 
       <button type="button"
