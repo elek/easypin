@@ -107,7 +107,7 @@ var pin = function () {
     error.value = "Please define a hash"
     return
   }
-  axios.get("/api/v0/block/x" + cid.value).then(function (res) {
+  axios.get("/api/v0/block/" + cid.value).then(function (res) {
     error.value = "The HASH is already pinned until " + res.data.Expiry
   }).catch(function (e) {
     var signer = provider.getSigner(account.value)
