@@ -11,7 +11,7 @@ axios.get("/api/v0/block/all").then(async function (res) {
 
 <template>
   <div>
-    <h1>Pinned IPFS root hashes</h1>
+    <h2>Recently pinned IPFS root blocks</h2>
     <main role="main">
       <table class="table">
         <thead>

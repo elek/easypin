@@ -107,13 +107,13 @@ var pin = function () {
     error.value = "Please define a hash"
     return
   }
-  axios.get("/api/v0/block/" + cid.value).then(function (res) {
+  axios.get("/api/v0/block/x" + cid.value).then(function (res) {
     error.value = "The HASH is already pinned until " + res.data.Expiry
-  }).catch(function (error) {
+  }).catch(function (e) {
     var signer = provider.getSigner(account.value)
     const contract = new ethers.Contract(pinAddress, pinAbi, signer)
     contract.pin(cid.value, price(duration), true).then(function (res) {
-      message.value = "Transaction has been submitted. Please wait until it's finished."
+      message.value = "Transaction has been submitted. Please wait until it's finished, or follow it on <a href=\"https://rinkeby.etherscan.io/tx/" + res.hash + "\">etherscan</a>."
       error.value = ""
     }).catch(error => function () {
       error.value = "Transaction couldn't be submitted: " + error
@@ -146,7 +146,7 @@ var p = computed(() => {
     <h1 class="h3 mb-3 font-weight-normal">Pin your IPFS hash</h1>
 
     <p class="alert alert-danger" role="alert" v-if="error">{{ error }}</p>
-    <p class="alert alert-success" role="alert" v-if="message">{{ message }}</p>
+    <p class="alert alert-success" role="alert" v-if="message" v-html="message"></p>
 
     <input v-model="cid" type="text" id="inputAmount" class="mb-3 form-control" placeholder="IPFS hash"
            required autofocus>
