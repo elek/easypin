@@ -125,7 +125,7 @@ var pin = function () {
 var checkExisting = function () {
   if (cid.value.length > 10) {
     axios.get("/api/v0/block/" + cid.value).then(function (res) {
-      message.value = "The <a href=\"/ipfs/" + cid.value + "\">requested hash </a> is already pinned for " + res.data.ValidDays + " days."
+      message.value = "The <a href=\"/ipfs/" + cid.value + "\">requested hash</a> is already pinned for " + res.data.ValidDays + " days. Send more STORJ tokens to extend the period."
       existing.value = true
     }).catch(function (e) {
       message.value = ""
@@ -159,13 +159,12 @@ var p = computed(() => {
 
 <template>
   <form class="form-signin">
-    <h1 class="h3 mb-3 font-weight-normal">Pin your IPFS hash</h1>
-
+    <p>Secure your files on IPFS by depositing STORJ token to the pinning smart contract. No registration is required!</p>
     <p class="alert alert-danger" role="alert" v-if="error">{{ error }}</p>
     <p class="alert alert-success" role="alert" v-if="message" v-html="message"></p>
 
     <input v-model="cid" v-on:input="checkExisting" type="text" id="inputAmount" class="mb-3 form-control"
-           placeholder="IPFS hash"
+           placeholder="Pin your IPFS hash"
            required autofocus>
 
     <div class="form-check form-check-inline">
