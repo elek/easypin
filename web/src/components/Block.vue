@@ -28,7 +28,10 @@ axios.get("/api/v0/pin/"+props.hash).then(async function (res) {
         <tbody>
         <tr>
           <td>Gateway link</td>
-          <td><a :href="'https://gateway.ipfs.io/ipfs/QmcUkP3BMDkKNp2V6FTojXqgCMWdpDFQb74uphQVdWpi9Z/' + block.Hash">ipfs.io</a></td>
+          <td>
+            <a :href="'/ipfs/' + block.Hash">gateway</a>,
+            <a :href="'https://gateway.ipfs.io/ipfs/' + block.Hash">ipfs.io</a>
+          </td>
         </tr>
         <tr>
           <td>Pinned at</td>
