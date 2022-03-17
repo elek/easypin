@@ -99,6 +99,8 @@ var approve = function () {
   var signer = provider.getSigner(account.value)
   const contract = new ethers.Contract(tokenAddress, tokenAbi, signer)
   contract.approve(pinAddress, defaultAllowance).then(function (res) {
+    message.value = "Transaction has been submitted. Please wait until it's finished, or follow it on <a href=\"https://rinkeby.etherscan.io/tx/" + res.hash + "\">etherscan</a>."
+    error.value = ""
     checkAllowance()
   })
 }
