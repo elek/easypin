@@ -34,6 +34,7 @@ read all (
 read all (
    select pin
    where pin.processed = false
+   where pin.retry < 3
    orderby asc pin.created_at
 )
 

@@ -1328,11 +1328,11 @@ func (obj *pgxImpl) All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
 
 }
 
-func (obj *pgxImpl) All_Pin_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx context.Context) (
+func (obj *pgxImpl) All_Pin_By_Processed_Equal_False_And_Retry_Less_Number_OrderBy_Asc_CreatedAt(ctx context.Context) (
 	rows []*Pin, err error) {
 	defer mon.Task()(&ctx)(&err)
 
-	var __embed_stmt = __sqlbundle_Literal("SELECT pins.tx, pins.ix, pins.cid, pins.retry, pins.error, pins.parse, pins.amount, pins.processed, pins.created_at FROM pins WHERE pins.processed = false ORDER BY pins.created_at")
+	var __embed_stmt = __sqlbundle_Literal("SELECT pins.tx, pins.ix, pins.cid, pins.retry, pins.error, pins.parse, pins.amount, pins.processed, pins.created_at FROM pins WHERE pins.processed = false AND pins.retry < 3 ORDER BY pins.created_at")
 
 	var __values []interface{}
 
@@ -1629,13 +1629,13 @@ func (rx *Rx) All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx context.Context,
 	return tx.All_Pin_By_Cid_OrderBy_Desc_CreatedAt(ctx, pin_cid)
 }
 
-func (rx *Rx) All_Pin_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx context.Context) (
+func (rx *Rx) All_Pin_By_Processed_Equal_False_And_Retry_Less_Number_OrderBy_Asc_CreatedAt(ctx context.Context) (
 	rows []*Pin, err error) {
 	var tx *Tx
 	if tx, err = rx.getTx(ctx); err != nil {
 		return
 	}
-	return tx.All_Pin_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx)
+	return tx.All_Pin_By_Processed_Equal_False_And_Retry_Less_Number_OrderBy_Asc_CreatedAt(ctx)
 }
 
 func (rx *Rx) All_Pin_OrderBy_Desc_CreatedAt(ctx context.Context) (
@@ -1725,7 +1725,7 @@ type Methods interface {
 		pin_cid Pin_Cid_Field) (
 		rows []*Pin, err error)
 
-	All_Pin_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx context.Context) (
+	All_Pin_By_Processed_Equal_False_And_Retry_Less_Number_OrderBy_Asc_CreatedAt(ctx context.Context) (
 		rows []*Pin, err error)
 
 	All_Pin_OrderBy_Desc_CreatedAt(ctx context.Context) (

@@ -31,6 +31,7 @@ type Pin struct {
 	Transaction string
 	LogIndex    uint
 	Processed   bool
+	Error       string
 }
 
 type Cid struct {
@@ -51,7 +52,7 @@ func (p *PinDB) Create(ctx context.Context, tx string, ix uint, cid string, amou
 func (p *PinDB) FindNew(ctx context.Context) ([]Pin, error) {
 	var res []Pin
 
-	rows, err := p.db.All_Pin_By_Processed_Equal_False_OrderBy_Asc_CreatedAt(ctx)
+	rows, err := p.db.All_Pin_By_Processed_Equal_False_And_Retry_Less_Number_OrderBy_Asc_CreatedAt(ctx)
 	if err != nil {
 		return res, ErrPinDB.Wrap(err)
 	}
@@ -153,6 +154,11 @@ func (p *PinDB) PinsOfHash(ctx context.Context, cid string) ([]Pin, error) {
 	return c, nil
 }
 
+func (p *PinDB) RecordError(ctx context.Context, transaction string, index uint, cid string, s string) error {
+	_, err := p.db.Query(ctx, p.db.Rebind("UPDATE pins SET retry = retry + 1, error = ? WHERE tx = ? AND ix = ?"), s, transaction, index)
+	return err
+}
+
 func dbToPin(r *dbx.Pin) Pin {
 	amount := new(big.Int)
 	if r.Amount != "" {
@@ -165,5 +171,6 @@ func dbToPin(r *dbx.Pin) Pin {
 		Transaction: r.Tx,
 		LogIndex:    uint(r.Ix),
 		Processed:   r.Processed,
+		Error:       r.Error,
 	}
 }

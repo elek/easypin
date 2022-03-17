@@ -110,6 +110,11 @@ func (c *Chore) PinMissing(ctx context.Context) (err error) {
 		err := c.Pin(ctx, p.Transaction, p.LogIndex, p.Cid, p.Amount)
 		if err != nil {
 			c.log.Error("Pinning is failed", zap.String("cid", p.Cid), zap.Error(err))
+			err = c.RecordError(ctx, p.Transaction, p.LogIndex, p.Cid, err.Error())
+			if err != nil {
+				c.log.Error("Error on recording pinning failure", zap.String("cid", p.Cid), zap.Error(err))
+			}
+
 		}
 	}
 	return nil
@@ -133,6 +138,10 @@ func (c *Chore) Pin(ctx context.Context, txHash string, ix uint, cid string, amo
 	}
 	c.log.Error("IPFS Block is pinned", zap.String("cid", cid), zap.Uint("days", days))
 	return nil
+}
+
+func (c *Chore) RecordError(ctx context.Context, transaction string, index uint, cid string, s string) error {
+	return c.db.RecordError(ctx, transaction, index, cid, s)
 }
 
 func calculateDays(basePrice *big.Int, paidToken *big.Int, size uint64) uint {

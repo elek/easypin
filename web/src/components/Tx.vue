@@ -20,6 +20,7 @@ axios.get("/api/v0/pin/all").then(async function (res) {
           <th scope="col">Cid</th>
           <th scope="col">Raw amount</th>
           <th scope="col">Processed</th>
+          <th scope="col">Error</th>
         </tr>
         </thead>
         <tbody>
@@ -29,6 +30,7 @@ axios.get("/api/v0/pin/all").then(async function (res) {
           <td>{{ tx.Cid }}</td>
           <td>{{ tx.Amount }}</td>
           <td>{{ tx.Processed }}</td>
+          <td>{{ tx.Error }}</td>
         </tr>
         </tbody>
       </table>
