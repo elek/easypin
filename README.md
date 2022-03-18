@@ -2,19 +2,25 @@ Easypin is a IPFS pinning service governed by a smart-contract, backed by [Storj
 storage.
 
 <!--ts-->
-
+* [Overview](#overview)
+* [What it does](#what-it-does)
+* [Getting started](#getting-started)
+   * [Request pinning via browser / metamask](#request-pinning-via-browser--metamask)
+   * [Request pinning from NFT contract (example)](#request-pinning-from-nft-contract-example)
 * [Deployments](#deployments)
-    * [Rinkeby deployment](#rinkeby-deployment)
+   * [Rinkeby deployment](#rinkeby-deployment)
 * [Development](#development)
-    * [Local deployment](#local-deployment)
-        * [Generate two accounts](#generate-two-accounts)
-        * [Deploy GOLD token (key1)](#deploy-gold-token-key1)
-        * [Deploy FAUCET (key1)](#deploy-faucet-key1)
-        * [Self-request token (key2)](#self-request-token-key2)
-        * [Deploy the pin contract (key1)](#deploy-the-pin-contract-key1)
-        * [Use the ping contract (key2)](#use-the-ping-contract-key2)
-        * [Starting the API server:](#starting-the-api-server)
-    * [Web development](#web-development)
+   * [Local deployment](#local-deployment)
+      * [Generate two accounts](#generate-two-accounts)
+      * [Deploy GOLD token (key1)](#deploy-gold-token-key1)
+      * [Deploy FAUCET (key1)](#deploy-faucet-key1)
+      * [Self-request token (key2)](#self-request-token-key2)
+      * [Deploy the pin contract (key1)](#deploy-the-pin-contract-key1)
+      * [Use the pin contract (key2)](#use-the-pin-contract-key2)
+      * [Starting the API server:](#starting-the-api-server)
+   * [Web development](#web-development)
+
+<!-- Added by: elek, at: Fri Mar 18 09:24:26 AM CET 2022 -->
 
 <!--te-->
 
