@@ -24,9 +24,56 @@ Easypin service has the following components:
  * An off-chain backend service which takes care about the pinning
  * A web-ui which makes easier to request new pinnings (using metamask)
 
-Smart contract function is deployed on rinkeby and can be called via the web-ui or from any contract (eg. from an NFT contract).
+The project is created by Kaloyan Raev, Marton Elek and Michael Ferris for [Faber Web3 hackathon](https://faberweb3.devpost.com/):
 
-## NFT example
+More details can be found here:
+
+https://devpost.com/software/crowdpinning-on-ipfs-using-decentralized-object-storage
+
+# Overview
+
+Web3 promises to be decentralized, trustless, permissionless, and autonomous technology. A glance at the current popular IPFS pinning services shows that they still stick to the traditional way of doing things:
+* They require you to register an account and pay with a credit card.
+* They store the pinned data on centralized cloud storage.
+* They require you to trust them they will do what they have promised.
+
+This project aims to provide an alternative, more Web3-oriented approach:
+* No need to register an account or obtain API keys.
+* Pay with crypto on the blockchain.
+* Store the pinned content on decentralized storage.
+* Verify on the blockchain that a specific IPFS hash has been requested to pin for a specific period.
+* Optionally, smart contracts can use this pinning approach, e.g. during NFT minting.
+
+# What it does
+
+The project uses [Storj](https://www.storj.io/) for storing the pinned content. Storj is decentralized object storage that splits the content into small encrypted pieces and stores them on tens of thousands of nodes across the globe. The project uses the [Storj datastore for IPFS](https://github.com/kaloyan-raev/ipfs-go-ds-storj) to store the IPFS blocks in a Storj bucket.
+
+Storj has its ERC-20 utility token called [STORJ](https://www.coingecko.com/en/coins/storj). Storage node operators receive STORJ for their service for storing and serving pieces of the data. Users who store data on the Storj network use the token to pay for the service.
+
+A key component of the project is an [Ethereum smart contract](https://rinkeby.etherscan.io/address/0xe7b556AB490C931dcc3319B56fC83B0628AE21bb) with a method:
+
+    pin(ipfsHash, tokenAmount)
+
+This method allows users and Dapps to deposit a specific amount of STORJ for a specific IPFS hash. (some additional parameters can flag if descriptor is supposed to be parsed during the pinning)
+
+The pinning service listens for events from the smart contract and pins the IPFS hash to an IPFS cluster backed by the Storj datastore. The pinning period is calculated from the content size and the STORJ amount deposited. This period can be extended by sending another transaction to the smart contract for the same IPFS hash. By anyone who is interested in keeping the content for longer in the IPFS network.
+
+The pinning service provides a restricted IPFS gateway. "Restricted" means that it will serve only the data that is pinned on the IPFS nodes of the service’s cluster. This IPFS gateway can be used as proof that the IPFS hash is really pinned by the service. The gateway is also the fastest way to retrieve the pinned content back from the IPFS network.
+
+The project is currently [demonstrated](https://easypin.storj-ipfs.com) on the Rinkeby Testnet. It can be deployed on any EVM-compatible blockchain like Ethereum Mainnet, Polygon, Avalanche, zkSync 2.0, etc. Some of these blockchains maintain low gas fees, which makes the micropayments for pinning IPFS hashes feasible with this smart contract.
+
+![Architecture](./overview.png)
+
+# Getting started
+
+Smart contract function is deployed on rinkeby testnet and can be called via the web-ui or from any contract (eg. from an NFT contract).
+
+## Request pinning via browser / metamask
+
+* Rinkeby web UI can be found here: https://easypin.storj-ipfs.com/#/
+* To getting started you can watch the [quick demonstration video](https://www.youtube.com/watch?v=imdNFsP0NWA) how to use it.
+
+## Request pinning from NFT contract (example)
 
 An example NFT contract can be found in `test/NFT.sol`.
 
@@ -75,8 +122,10 @@ ceth contract call --contract NFT mintNew 0x712Ce0cBEe9423E414493542FfebF418C16c
 Rinkeby deployment uses the ZkSync Test STORJ tokens. You can mint
 it [here](https://wallet.zksync.io/?network=rinkeby) (Add Funds, Mint tokens, ....)
 
-Token
+Token (ZkSync test STORJ token)
 contract [0x8098165d982765097e4aa17138816e5b95f9fdb5](https://rinkeby.etherscan.io/address/0x8098165d982765097e4aa17138816e5b95f9fdb5)
+
+Tokens can be requested via the faucet of ZkSync wallet (https://wallet.zksync.io/?network=rinkeby / Add Funds / Mint tokens) 
 
 PIN
 contract: [0xe7b556AB490C931dcc3319B56fC83B0628AE21bb](https://rinkeby.etherscan.io/address/0xe7b556AB490C931dcc3319B56fC83B0628AE21bb)
